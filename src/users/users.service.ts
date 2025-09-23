@@ -17,11 +17,8 @@ export class UsersService {
   findByPhone(phone: string): Promise<User | null> {
     return this.usersRepo.findOne({ where: { phone } });
   }
-
-  findByGoogleId(googleId: string): Promise<User | null> {
-    return this.usersRepo.findOne({ where: { google_id: googleId } });
-  }
-
+  
+  
   findById(id: number): Promise<User | null> {
     return this.usersRepo.findOne({ where: { user_id: id } });
   }
@@ -35,7 +32,11 @@ export class UsersService {
     return this.usersRepo.update({ user_id: userId }, { password_hash });
   }
 
-  linkGoogleId(userId: number, googleId: string) {
-    return this.usersRepo.update({ user_id: userId }, { google_id: googleId });
+  async updateProfile(userId: number, updateData: any): Promise<User> {
+    await this.usersRepo.update({ user_id: userId }, updateData);
+    const user = await this.findById(userId);
+    if (!user) throw new Error('User not found after update');
+    return user;
   }
+  
 }
