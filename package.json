@@ -30,16 +30,16 @@
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.3.1",
     "mysql2": "^3.14.3",
+    "nodemailer": "^6.9.4",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "typeorm": "^0.3.26",
-    "nodemailer": "^6.9.4"
+    "typeorm": "^0.3.26"
   },
   "optionalDependencies": {
-    "class-validator": "^1.0.1",
-    "class-transformer": "^0.5.1"
+    "class-transformer": "^0.5.1",
+    "class-validator": "^1.0.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

@@ -1,98 +1,120 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Fitness & Nutrition Management System
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## 🎯 Project Overview
+Hệ thống quản lý dinh dưỡng và thể hình với đầy đủ tính năng authentication, quản lý sản phẩm và giỏ hàng.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Features
+- **Authentication System**: Register, Login, Forgot Password với OTP
+- **User Management**: Profile management, Change password
+- **Product Management**: Products, Categories, Brands
+- **Shopping Cart**: Add, Update, Remove items
+- **Email Service**: SMTP integration với HTML templates
 
-## Description
+## 🛠️ Tech Stack
+- **Backend**: NestJS, TypeScript
+- **Database**: MySQL với TypeORM
+- **Authentication**: JWT, bcryptjs
+- **Email**: Nodemailer
+- **Validation**: class-validator
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## 📦 Installation
 
 ```bash
-$ npm install
+# Clone repository
+git clone https://github.com/yourusername/fitness-nutrition.git
+cd fitness-nutrition
+
+# Install dependencies
+npm install
+
+# Setup environment variables
+cp .env.example .env
+# Edit .env with your database and SMTP settings
+
+# Run database migrations
+npm run migration:run
+
+# Start development server
+npm run start:dev
 ```
 
-## Compile and run the project
+## 🔧 Environment Variables
 
-```bash
-# development
-$ npm run start
+```env
+# Database
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASS=your_password
+DB_NAME=gymsinhvien
 
-# watch mode
-$ npm run start:dev
+# JWT
+JWT_SECRET=your_jwt_secret
 
-# production mode
-$ npm run start:prod
+# SMTP Email
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your@gmail.com
+SMTP_PASS=your_app_password
+FROM_EMAIL=noreply@yourdomain.com
+
+# Server
+HOST=0.0.0.0
+PORT=3201
+FRONTEND_URL=http://localhost:8080
 ```
 
-## Run tests
+## 📊 API Endpoints
 
-```bash
-# unit tests
-$ npm run test
+### Authentication
+- `POST /auth/register` - Đăng ký tài khoản
+- `POST /auth/login` - Đăng nhập
+- `POST /auth/forgot-password` - Quên mật khẩu
+- `POST /auth/verify-otp` - Xác thực OTP
+- `POST /auth/reset-password` - Đặt lại mật khẩu
+- `PUT /auth/change-password` - Thay đổi mật khẩu
+- `GET /auth/profile` - Xem profile
+- `PUT /auth/profile` - Cập nhật profile
 
-# e2e tests
-$ npm run test:e2e
+### Products
+- `GET /products` - Danh sách sản phẩm
+- `GET /products/:id` - Chi tiết sản phẩm
+- `GET /brands` - Danh sách thương hiệu
+- `GET /categories` - Danh sách danh mục
 
-# test coverage
-$ npm run test:cov
+### Cart
+- `GET /cart` - Xem giỏ hàng
+- `POST /cart/items` - Thêm vào giỏ
+- `PUT /cart/items/:id` - Cập nhật số lượng
+- `DELETE /cart/items/:id` - Xóa khỏi giỏ
+
+## 🏗️ Project Structure
+
+```
+src/
+├── auth/           # Authentication module
+├── users/          # User management
+├── products/       # Product management
+├── cart/           # Shopping cart
+├── brands/         # Brand management
+├── categories/     # Category management
+└── main.ts         # Application entry point
 ```
 
-## Deployment
+## 🔒 Security Features
+- Password hashing với bcryptjs
+- JWT token authentication
+- Input validation và sanitization
+- SQL injection prevention
+- CORS configuration
+- Rate limiting ready
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## 📝 License
+MIT License
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## 👥 Contributing
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request

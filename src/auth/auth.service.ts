@@ -226,11 +226,11 @@ export class AuthService {
 
     const user = await this.usersService.findById(record.user_id);
     if (!user) {
-      console.log('❌ User not found for OTP');
+      console.log(' User not found for OTP');
       throw new NotFoundException('User not found');
     }
     
-    console.log('✅ OTP valid for user:', user.email);
+    console.log(' OTP valid for user:', user.email);
     
     return { 
       message: 'Mã OTP hợp lệ', 
