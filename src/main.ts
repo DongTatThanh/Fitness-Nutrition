@@ -10,9 +10,9 @@ async function bootstrap() {
   console.log('🔧 Environment Variables Check:');
   console.log('PORT:', process.env.PORT);
   console.log('HOST:', process.env.HOST);
-  console.log('SMTP_HOST:', process.env.SMTP_HOST ? '✅ Set' : '❌ Missing');
-  console.log('SMTP_USER:', process.env.SMTP_USER ? '✅ Set' : '❌ Missing');
-  console.log('SMTP_PASS:', process.env.SMTP_PASS ? '✅ Set' : '❌ Missing');
+  console.log('SMTP_HOST:', process.env.SMTP_HOST ? ' Set' : ' Missing');
+  console.log('SMTP_USER:', process.env.SMTP_USER ? ' Set' : ' Missing');
+  console.log('SMTP_PASS:', process.env.SMTP_PASS ? ' Set' : ' Missing');
   console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
   
   const app = await NestFactory.create(AppModule);
@@ -20,11 +20,11 @@ async function bootstrap() {
   // Enable CORS for cross-origin requests
   app.enableCors({
     origin: [
-      'http://localhost:8080',
-      'http://localhost:3000', 
-      'http://127.0.0.1:8080',
-      /^http:\/\/192\.168\.\d+\.\d+:8080$/, // LAN access
-      /^http:\/\/10\.\d+\.\d+\.\d+:8080$/, // Private network
+      'http://localhost:8081',
+      'http://localhost:3000',
+      'http://127.0.0.1:8081',
+      /^http:\/\/192\.168\.\d+\.\d+:8081$/, // LAN access
+      /^http:\/\/10\.\d+\.\d+\.\d+:8081$/, // Private network
       process.env.FRONTEND_URL
     ].filter(Boolean),
     credentials: true,
@@ -44,7 +44,7 @@ async function bootstrap() {
         const constraints = error.constraints;
         return Object.values(constraints || {}).join(', ');
       });
-      console.log('🔴 Validation errors:', messages);
+      console.log(' Validation errors:', messages);
       return new BadRequestException(messages.join(', '));
     }
   }));
@@ -53,8 +53,8 @@ async function bootstrap() {
   const host = process.env.HOST ?? '0.0.0.0'; // Listen on all interfaces
   
   await app.listen(port, host);
-  console.log(`🚀 Server running on http://${host}:${port}`);
-  console.log(`📱 Available on LAN at http://YOUR_IP:${port}`);
+  console.log(` Server running on http://${host}:${port}`);
+  console.log(` Available on LAN at http://YOUR_IP:${port}`);
 }
 
 bootstrap();

@@ -32,6 +32,7 @@ export class AuthService {
       access_token: this.jwtService.sign(payload),
     };
   }
+  
 
   async register(createUserDto: any) {
     const existing = await this.usersService.findByEmail(createUserDto.email);
@@ -62,7 +63,7 @@ export class AuthService {
 
   async requestPasswordReset(email: string) {
     const user = await this.usersService.findByEmail(email);
-    if (!user) throw new NotFoundException('User with email not found');
+    if (!user) throw new NotFoundException('email không tồn tại trong database');
     
     // Generate 6-digit OTP instead of hex token
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -80,16 +81,16 @@ export class AuthService {
       subject: 'Mã xác thực đặt lại mật khẩu',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h2 style="color: #333; text-align: center;">🔐 Đặt lại mật khẩu</h2>
+          <h2 style="color: #333; text-align: center;"> Đặt lại mật khẩu</h2>
           <p>Bạn đã yêu cầu đặt lại mật khẩu. Sử dụng mã OTP sau để tiếp tục:</p>
           
           <div style="background: #f8f9fa; padding: 30px; text-align: center; border-radius: 10px; margin: 25px 0; border: 2px dashed #007bff;">
             <h1 style="color: #007bff; font-size: 40px; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">${otpCode}</h1>
-            <p style="color: #666; margin-top: 15px; font-size: 14px;">⏰ Mã có hiệu lực trong <strong>15 phút</strong></p>
+            <p style="color: #666; margin-top: 15px; font-size: 14px;"> Mã có hiệu lực trong <strong>15 phút</strong></p>
           </div>
           
           <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
-            <p style="margin: 0; color: #856404;"><strong>⚠️ Lưu ý quan trọng:</strong></p>
+            <p style="margin: 0; color: #856404;"><strong> Lưu ý quan trọng:</strong></p>
             <ul style="color: #856404; margin: 10px 0 0 20px;">
               <li>Mã OTP chỉ sử dụng được <strong>một lần duy nhất</strong></li>
               <li>Không chia sẻ mã này với bất kì ai</li>
@@ -129,32 +130,32 @@ export class AuthService {
   }
 
   async resetPassword(otp: string, newPassword: string) {
-    console.log('🔍 Looking for OTP:', otp);
+    console.log('Looking for OTP:', otp);
     
     const record = await this.passwordResetRepo.findOne({ where: { token: otp } });
     if (!record) {
-      console.log('❌ OTP not found in database');
+      console.log(' OTP not found in database');
       throw new NotFoundException('Mã OTP không hợp lệ');
     }
     
     if (record.expires_at < new Date()) {
-      console.log('❌ OTP expired');
+      console.log(' OTP expired');
       throw new UnauthorizedException('Mã OTP đã hết hạn');
     }
     
     const user = await this.usersService.findById(record.user_id);
     if (!user) {
-      console.log('❌ User not found');
+      console.log(' User not found');
       throw new NotFoundException('Người dùng không tồn tại');
     }
     
-    console.log('✅ OTP valid, updating password for user:', user.email);
+    console.log(' OTP valid, updating password for user:', user.email);
     const hash = await bcrypt.hash(newPassword, 10);
     await this.usersService.updatePassword(user.user_id, hash);
     
     // Remove used OTP
     await this.passwordResetRepo.delete(record.id);
-    console.log('✅ Password updated successfully');
+    console.log(' Password updated successfully');
     
     return { message: 'Đặt lại mật khẩu thành công' };
   }
@@ -208,19 +209,19 @@ export class AuthService {
   }
 
   async verifyOtpOnly(otp: string) {
-    console.log('🔍 Verifying OTP only:', otp);
+    console.log(' Verifying OTP only:', otp);
     const record = await this.passwordResetRepo.findOne({
       where: { token: otp }
     });
 
     if (!record) {
-      console.log('❌ OTP not found in database');
+      console.log(' OTP not found in database');
       throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn');
     }
 
-    console.log('✅ OTP found, checking expiry...');
+    console.log(' OTP found, checking expiry...');
     if (record.expires_at < new Date()) {
-      console.log('❌ OTP expired');
+      console.log(' OTP expired');
       throw new BadRequestException('Mã OTP đã hết hạn');
     }
 
