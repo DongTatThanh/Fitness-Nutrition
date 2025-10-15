@@ -38,7 +38,7 @@ export class CartService {
     const { product_id, variant_id, quantity } = addToCartDto;
 
     // Verify product exists
-    const product = await this.productRepo.findOne({ where: { id: product_id, is_active: true } });
+    const product = await this.productRepo.findOne({ where: { id: product_id} });
     if (!product) {
       throw new NotFoundException('Product not found');
     }

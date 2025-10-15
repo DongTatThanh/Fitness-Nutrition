@@ -7,10 +7,10 @@ import { Product } from './products/product.entity';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 
-import { BrandsModule } from './brands/brands.module';
-import { CategoriesModule } from './categories/categories.module';
+
 import { CartModule } from './cart/cart.module';
 import { DiscountCodeModule } from './discount_code/discount_code.module';
+import { ProductsModule } from './products/products.module';
 
 @Module({
   imports: [
@@ -29,10 +29,10 @@ import { DiscountCodeModule } from './discount_code/discount_code.module';
     UsersModule,
     AuthModule,
    
-    BrandsModule,
-    CategoriesModule,
+  
     CartModule,
     DiscountCodeModule,
+    ProductsModule
   ],
   controllers: [AppController],
   providers: [AppService],

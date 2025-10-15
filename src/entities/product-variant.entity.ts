@@ -33,7 +33,7 @@ export class ProductVariant {
   @CreateDateColumn()
   created_at: Date;
 
-  @ManyToOne(() => Product, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Product, (product) => product.variants, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'product_id' })
   product: Product;
 }

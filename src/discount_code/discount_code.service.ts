@@ -15,7 +15,7 @@ export class DiscountCodeService {
     async findAll(): Promise<DiscountCode[]> {
         return await this.discountCodeRepository.find({
             order: {
-                created_at: 'DESC'
+                created_at: 'DESC'   /// sắp xêp theo thứ tự tăng dần cũ mới ....
             }
         });
     }
