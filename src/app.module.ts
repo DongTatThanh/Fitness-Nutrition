@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { CartModule } from './cart/cart.module';
 import { DiscountCodeModule } from './discount_code/discount_code.module';
 import { ProductsModule } from './products/products.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
@@ -32,7 +33,9 @@ import { ProductsModule } from './products/products.module';
   
     CartModule,
     DiscountCodeModule,
-    ProductsModule
+    ProductsModule,
+    CategoriesModule  
+    
   ],
   controllers: [AppController],
   providers: [AppService],

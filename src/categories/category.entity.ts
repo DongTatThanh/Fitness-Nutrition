@@ -1,25 +1,64 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, OneToMany } from 'typeorm';
 import { Product } from '../products/product.entity';
 
-@Entity('categories')
-export class Category {
-  @PrimaryGeneratedColumn()
-  id: number;
+import { IsInt, IsOptional, IsString, IsBoolean, IsUrl, MaxLength } from 'class-validator';
 
-  @Column({ length: 100, unique: true })
+export class CreateCategoryDto {
+  @IsOptional()
+    @IsInt()
+    id?: number;
+
+  @IsString()
+  @MaxLength(100)
   name: string;
 
-  @Column({ type: 'text', nullable: true })
-  description: string;
+  @IsString()
+  @MaxLength(120)
+  slug: string;
 
-  @Column({ name: 'image_url', length: 255, nullable: true })
-  image_url: string;
+  @IsOptional()
+  @IsString()
+  description?: string;
 
-  @Column({ name: 'is_active', type: 'tinyint', default: 1 })
-  is_active: number;
+  @IsOptional()
+  @IsUrl()
+  @MaxLength(255)
+  image_url?: string;
 
-  @CreateDateColumn({ name: 'created_at' })
-  created_at: Date;
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  icon_class?: string;
+
+  @IsOptional()
+  @IsInt()
+  parent_id?: number;
+
+  @IsOptional()
+  @IsInt()
+  level?: number;
+
+  @IsOptional()
+  @IsInt()
+  sort_order?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  is_featured?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  is_active?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  seo_title?: string;
+
+  @IsOptional()
+  @IsString()
+  seo_description?: string;
+
 
   @OneToMany(() => Product, (product) => product.category)
   products: Product[];

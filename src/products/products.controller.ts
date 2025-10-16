@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';    
+import { Controller, Get, Query } from '@nestjs/common';    
 import { ProductsService } from './products.service';
 
 @Controller('products')
@@ -12,10 +12,14 @@ export class ProductsController {
     }
 
     // lấy các sản phẩm đang giảm giá 
-    @Get("onSale")
-     async findOnSaleProducts(){
-        return this.productsService.findOnSaleProducts();
-     }
+    @Get("on-sale")
+    async findOnSaleProducts(@Query('limit') limit?: number) {
+        return this.productsService.findOnSaleProducts(limit ? +limit : 10);
+    }
 
-
+    // lấy các sản phẩm bán chạy nhất
+    @Get("best-sellers")
+    async findBestSellers(@Query('limit') limit?: number) {
+        return this.productsService.findBestSellers(limit ? +limit : 10);
+    }
 }
