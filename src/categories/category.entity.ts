@@ -1,65 +1,55 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, OneToMany } from 'typeorm';
 import { Product } from '../products/product.entity';
 
-import { IsInt, IsOptional, IsString, IsBoolean, IsUrl, MaxLength } from 'class-validator';
+@Entity({ name: 'categories' })
+export class Category {
+  
+  @PrimaryGeneratedColumn()
+  id: number;
 
-export class CreateCategoryDto {
-  @IsOptional()
-    @IsInt()
-    id?: number;
-
-  @IsString()
-  @MaxLength(100)
+  @Column({ length: 100 })
   name: string;
 
-  @IsString()
-  @MaxLength(120)
+  @Column({ length: 120 })
   slug: string;
 
-  @IsOptional()
-  @IsString()
-  description?: string;
+  @Column({ type: 'text', nullable: true })
+  description: string;
 
-  @IsOptional()
-  @IsUrl()
-  @MaxLength(255)
-  image_url?: string;
+  @Column({ length: 255, nullable: true })
+  image_url: string;
 
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  icon_class?: string;
+  @Column({ length: 100, nullable: true })
+  icon_class: string;
 
-  @IsOptional()
-  @IsInt()
-  parent_id?: number;
+  @Column({ nullable: true })
+  parent_id: number;
 
-  @IsOptional()
-  @IsInt()
-  level?: number;
+  @Column({ type: 'tinyint', default: 1 })
+  level: number;
 
-  @IsOptional()
-  @IsInt()
-  sort_order?: number;
+  @Column({ type: 'int', default: 0 })
+  sort_order: number;
 
-  @IsOptional()
-  @IsBoolean()
-  is_featured?: boolean;
+  @Column({ type: 'tinyint', width: 1, default: 0 })
+  is_featured: boolean;
 
-  @IsOptional()
-  @IsBoolean()
-  is_active?: boolean;
+  @Column({ type: 'tinyint', width: 1, default: 1 })
+  is_active: boolean;
 
-  @IsOptional()
-  @IsString()
-  @MaxLength(255)
-  seo_title?: string;
+  @Column({ length: 255, nullable: true })
+  seo_title: string;
 
-  @IsOptional()
-  @IsString()
-  seo_description?: string;
+  @Column({ type: 'text', nullable: true })
+  seo_description: string;
 
+  @CreateDateColumn()
+  created_at: Date;
 
+  @CreateDateColumn()
+  updated_at: Date;
+
+  // Relations
   @OneToMany(() => Product, (product) => product.category)
   products: Product[];
 }

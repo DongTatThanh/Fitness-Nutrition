@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from "@nestjs/common";
+import { Controller, Get, Param, ParseIntPipe } from "@nestjs/common";
 import { CategoriesService } from "./categories.service";
 
 @Controller('categories')
@@ -13,15 +13,21 @@ export class CategoriesController {
         return this.categoriesService.findAll();
     }
 
+    // Lấy tất cả categories kèm sản phẩm (PHẢI ĐẶT TRƯỚC :id)
+    @Get('all/with-products')
+    async findAllCategoriesWithProducts() {
+        return this.categoriesService.findAllCategoriesWithProducts();
+    }
+
     // Lấy category theo id
     @Get(':id')
-    async findById(@Param('id') id: number) {
-        return this.categoriesService.findById(+id);
+    async findById(@Param('id', ParseIntPipe) id: number) {
+        return this.categoriesService.findById(id);
     }
 
     // Lấy category kèm sản phẩm
     @Get(':id/products')
-    async findCategoryWithProducts(@Param('id') id: number) {
-        return this.categoriesService.findCategoryWithProducts(+id);
+    async findCategoryWithProducts(@Param('id', ParseIntPipe) id: number) {
+        return this.categoriesService.findCategoryWithProducts(id);
     }
 }

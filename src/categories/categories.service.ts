@@ -1,19 +1,19 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { Repository } from "typeorm";
-import { InjectRepository } from "@nestjs/typeorm";
+import { InjectRepository } from "@nestjs/typeorm"; 
 import { Category } from "./category.entity";
 
 @Injectable()
-export class CategoriesService {
-  constructor(
+export class CategoriesService {  
+ constructor(  
     @InjectRepository(Category)
-    private categoriesRepository: Repository<Category>,
+    private categoriesRepository: Repository<Category>
   ) {}
 
   // Lấy tất cả các danh mục categories
   async findAll(): Promise<Category[]> {
     return this.categoriesRepository.find({
-      where: { is_active: 1 },
+      where: { is_active: true },
       order: { name: "ASC" },
     });
   }
@@ -21,7 +21,7 @@ export class CategoriesService {
   // Lấy category theo id
   async findById(id: number): Promise<Category> {
     const category = await this.categoriesRepository.findOne({
-      where: { category_id: id, is_active: 1 }
+      where: { id, is_active: true }
     });
     
     if (!category) {
@@ -34,7 +34,7 @@ export class CategoriesService {
   // Lấy category kèm sản phẩm
   async findCategoryWithProducts(id: number): Promise<Category> {
     const category = await this.categoriesRepository.findOne({
-      where: { category_id: id, is_active: 1 },
+      where: { id, is_active: true },
       relations: ['products', 'products.brand']
     });
     
@@ -44,4 +44,24 @@ export class CategoriesService {
 
     return category;
   }
+
+  // Lấy tất cả danh mục categories kèm sản phẩm
+  async findAllCategoriesWithProducts() {
+    const categories = await this.categoriesRepository.find({
+      where: { is_active: true },
+      relations: ['products', 'products.brand'],
+      order: { sort_order: 'ASC' }
+    });
+
+    return categories.map(cat => ({
+      id: cat.id,
+      name: cat.name,
+      slug: cat.slug,
+      products: cat.products
+    }));
+  }
+     
+
+
+     
 }
