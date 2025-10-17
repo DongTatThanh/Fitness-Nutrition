@@ -71,8 +71,18 @@ async findBestSellers(limit: number = 10): Promise<Product[]> {
   return result.entities;
 }
 
+  // Cập nhật ảnh product
+  async updateProductImage(productId: number, imageUrl: string): Promise<Product> {
+    const product = await this.productsRepository.findOne({
+      where: { id: productId }
+    });
 
-   
+    if (!product) {
+      throw new NotFoundException(`Product với ID ${productId} không tồn tại`);
+    }
 
+    product.featured_image = imageUrl;
+    return this.productsRepository.save(product);
+  }
 }
   

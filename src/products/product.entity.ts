@@ -51,9 +51,8 @@ export class Product {
   @Column({ type: 'tinyint', width: 1, default: 0 })
   track_inventory: boolean;
 
-  // ⚙️ Sửa đúng cột gây lỗi ở đây
-  @Column({ name: 'inventory_quantity', type: 'int', default: 0 })
-  inventoryQuantity: number;
+  @Column({ type: 'int', default: 0 })
+  inventory_quantity: number;
 
   @Column({ type: 'int', nullable: true })
   low_stock_threshold: number;

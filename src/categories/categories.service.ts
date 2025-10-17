@@ -39,7 +39,7 @@ export class CategoriesService {
     });
     
     if (!category) {
-      throw new NotFoundException(`Category với ID ${id} không tồn tại`);
+      throw new NotFoundException(`Category với ID ${id} không tồn tại`); 
     }
 
     return category;
@@ -60,8 +60,18 @@ export class CategoriesService {
       products: cat.products
     }));
   }
-     
 
+  // Cập nhật ảnh category
+  async updateCategoryImage(id: number, imageUrl: string): Promise<Category> {
+    const category = await this.categoriesRepository.findOne({
+      where: { id }
+    });
 
-     
+    if (!category) {
+      throw new NotFoundException(`Category với ID ${id} không tồn tại`);
+    }
+
+    category.image_url = imageUrl;
+    return this.categoriesRepository.save(category);
+  }
 }
