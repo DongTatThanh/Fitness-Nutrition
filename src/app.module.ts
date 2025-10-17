@@ -13,6 +13,7 @@ import { DiscountCodeModule } from './discount_code/discount_code.module';
 import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { BrandsModule } from './brands/brands.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { UploadsModule } from './uploads/uploads.module';
     ProductsModule,
     CategoriesModule,
     UploadsModule,
+    BrandsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

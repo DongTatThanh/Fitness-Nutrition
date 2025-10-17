@@ -13,7 +13,7 @@ export class CategoriesController {
         return this.categoriesService.findAll();
     }
 
-    // Lấy tất cả categories kèm sản phẩm (PHẢI ĐẶT TRƯỚC :id)
+    // Lấy tất cả categories kèm sản phẩm 
     @Get('all/with-products')
     async findAllCategoriesWithProducts() {
         return this.categoriesService.findAllCategoriesWithProducts();

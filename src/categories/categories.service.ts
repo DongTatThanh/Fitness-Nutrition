@@ -35,7 +35,7 @@ export class CategoriesService {
   async findCategoryWithProducts(id: number): Promise<Category> {
     const category = await this.categoriesRepository.findOne({
       where: { id, is_active: true },
-      relations: ['products', 'products.brand']
+        relations: ['products', 'products.brand']
     });
     
     if (!category) {
