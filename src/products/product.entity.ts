@@ -1,7 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Brand } from '../brands/brand.entity';
 import { Category } from '../categories/category.entity';
-import { ProductVariant } from '../entities/product-variant.entity';
+import { ProductVariant } from './product-variant.entity';
+import { ProductReview } from './product-review.entity';
+import { ProductAttribute } from './product-attribute.entity';
+
 
 @Entity({ name: 'products' })
 export class Product {
@@ -119,4 +122,10 @@ export class Product {
 
   @OneToMany(() => ProductVariant, (variant) => variant.product)
   variants: ProductVariant[];
+
+  @OneToMany(() => ProductReview, (review) => review.product)
+  reviews: ProductReview[];
+
+  @OneToMany(() => ProductAttribute, (attribute) => attribute.product)
+  attributes: ProductAttribute[];
 }

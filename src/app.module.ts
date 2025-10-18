@@ -8,7 +8,7 @@ import { User } from './entities/user.entity';
 import { Product } from './products/product.entity';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { CartModule } from './cart/cart.module';
+
 import { DiscountCodeModule } from './discount_code/discount_code.module';
 import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
@@ -37,7 +37,7 @@ import { FlashSalesModule } from './flash_sales/flash-_ales.module';
     TypeOrmModule.forFeature([User, Product]),
     UsersModule,
     AuthModule,
-    CartModule,
+
     DiscountCodeModule,
     ProductsModule,
     CategoriesModule,
