@@ -191,4 +191,18 @@ export class DiscountCodeService {
             message: `Đã xóa hoàn toàn mã giảm giá "${discountCode.code}"`
         };
     }
+
+    // Cập nhật ảnh cho mã giảm giá
+    async updateDiscountCodeImage(id: number, imageUrl: string): Promise<DiscountCode> {
+        const discountCode = await this.discountCodeRepository.findOne({
+            where: { id }
+        });
+
+        if (!discountCode) {
+            throw new NotFoundException(`Mã giảm giá với ID ${id} không tồn tại`);
+        }
+
+        discountCode.image_url = imageUrl;
+        return await this.discountCodeRepository.save(discountCode);
+    }
 }
