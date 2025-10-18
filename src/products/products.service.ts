@@ -25,6 +25,7 @@ export class ProductsService {
 
    async findOnSaleProducts(limit: number = 10): Promise<Product[]> {
   return await this.productsRepository
+  
     .createQueryBuilder('product')
     .leftJoinAndSelect('product.brand', 'brand')
     .leftJoinAndSelect('product.category', 'category')

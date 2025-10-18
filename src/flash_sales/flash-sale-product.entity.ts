@@ -1,8 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { FlashSale } from './flash-sale.entity';
 import { Product } from '../products/product.entity';
 
-@Entity('flash_sale_products')
+@Entity('flash_sale_items')
 export class FlashSaleProduct {
   @PrimaryGeneratedColumn()
   id: number;
@@ -13,22 +13,22 @@ export class FlashSaleProduct {
   @Column()
   product_id: number;
 
-  @Column({ type: 'int' })
-  discount_percent: number; // % giảm
+  @Column({ nullable: true })
+  variant_id: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  discount_amount: number; // Số tiền giảm
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  original_price: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  sale_price: number;
 
   @Column({ type: 'int', nullable: true })
-  quantity_limit: number; // Giới hạn
+  max_quantity: number;
 
   @Column({ type: 'int', default: 0 })
-  sold_count: number; // Đã bán
+  sold_quantity: number;
 
-  @CreateDateColumn()
-  created_at: Date;
-
-  @ManyToOne(() => FlashSale, flashSale => flashSale.products)
+  @ManyToOne(() => FlashSale, flashSale => flashSale.items)
   @JoinColumn({ name: 'flash_sale_id' })
   flashSale: FlashSale;
 
