@@ -3,6 +3,7 @@ import { Repository } from "typeorm";
 import { InjectRepository } from "@nestjs/typeorm"; 
 import { Category } from "./category.entity";
 
+
 @Injectable()
 export class CategoriesService {  
  constructor(  
@@ -57,7 +58,7 @@ export class CategoriesService {
       id: cat.id,
       name: cat.name,
       slug: cat.slug,
-      products: cat.products
+      products: cat.products,
     }));
   }
 

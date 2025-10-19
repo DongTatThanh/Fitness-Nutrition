@@ -6,6 +6,7 @@ import { ProductReview } from './product-review.entity';
 import { ProductAttribute } from './product-attribute.entity';
 
 
+
 @Entity({ name: 'products' })
 export class Product {
 
@@ -123,9 +124,9 @@ export class Product {
   @OneToMany(() => ProductVariant, (variant) => variant.product)
   variants: ProductVariant[];
 
-  @OneToMany(() => ProductReview, (review) => review.product)
-  reviews: ProductReview[];
-
   @OneToMany(() => ProductAttribute, (attribute) => attribute.product)
   attributes: ProductAttribute[];
+
+  @OneToMany(() => ProductReview, (review) => review.product)
+  reviews: ProductReview[];
 }
