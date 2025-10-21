@@ -15,6 +15,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { BrandsModule } from './brands/brands.module';
 import { FlashSalesModule } from './flash_sales/flash-_ales.module';
+import { BannersModule } from './banners/banner.module';
 
 @Module({
   imports: [
@@ -28,7 +29,7 @@ import { FlashSalesModule } from './flash_sales/flash-_ales.module';
       host: process.env.DB_HOST ?? 'localhost',
       port: Number(process.env.DB_PORT ?? 3306),
       username: process.env.DB_USER ?? 'root',
-      password: process.env.DB_PASS ?? '123456',
+      password: process.env.DB_PASS ?? '',
       database: process.env.DB_NAME ?? 'gymsinhvien',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: false, // set to true for local development only
@@ -44,6 +45,8 @@ import { FlashSalesModule } from './flash_sales/flash-_ales.module';
     UploadsModule,
     BrandsModule,
     FlashSalesModule,
+    BannersModule,
+    
   ],
   controllers: [AppController],
   providers: [AppService],

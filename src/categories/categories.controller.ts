@@ -8,7 +8,7 @@ export class CategoriesController {
     ) {}
      
     // Lấy tất cả các danh mục categories
-    @Get()
+    @Get()  
     async findAll() {
         return this.categoriesService.findAll();
     }
