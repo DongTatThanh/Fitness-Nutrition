@@ -16,6 +16,8 @@ import { UploadsModule } from './uploads/uploads.module';
 import { BrandsModule } from './brands/brands.module';
 import { FlashSalesModule } from './flash_sales/flash-_ales.module';
 import { BannersModule } from './banners/banner.module';
+import { StoresModule } from './stores/stores.module';
+import { ProductViewModule } from './products/productView/productView.module';
 
 @Module({
   imports: [
@@ -46,7 +48,8 @@ import { BannersModule } from './banners/banner.module';
     BrandsModule,
     FlashSalesModule,
     BannersModule,
-    
+    StoresModule,
+    ProductViewModule,
   ],
   controllers: [AppController],
   providers: [AppService],
