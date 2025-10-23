@@ -15,6 +15,8 @@ export class CategoriesService {
   async findAll(): Promise<Category[]> {
     return this.categoriesRepository.find({
       where: { is_active: true },
+    
+      
       order: { name: "ASC" },
     });
   }
@@ -36,7 +38,8 @@ export class CategoriesService {
   async findCategoryWithProducts(id: number): Promise<Category> {
     const category = await this.categoriesRepository.findOne({
       where: { id, is_active: true },
-        relations: ['products', 'products.brand']
+      relations: ['products', 'products.brand'],
+      order: { sort_order: 'ASC' }
     });
     
     if (!category) {

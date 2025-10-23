@@ -44,7 +44,7 @@ export class BannersService {
 
   // Tạo banner mới
   async createBanner(bannerData: Partial<Banner>): Promise<Banner> {
-v    const banner = this.bannersRepository.create(bannerData);
+  const banner = this.bannersRepository.create(bannerData);
     return await this.bannersRepository.save(banner);
   }
 
