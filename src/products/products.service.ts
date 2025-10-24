@@ -1,9 +1,11 @@
 
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Between, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './product.entity';
 import { promises } from 'dns';
+import { Category } from 'src/categories/category.entity';
+import e from 'express';
 
 
 
@@ -107,37 +109,49 @@ async findBestSellers(limit: number = 10): Promise<Product[]> {
 
     return product;
   }
-  //  lấy các sản phẩm cùng phân khúc 
-  async findSimilarPriceProducts  // range + - 20%
-  (productId: number, range: number = 20, limit: number = 8): Promise<Product[]>
-   {
-    const  product = await this.productsRepository.findOne({
-      where: { id: productId }
-    });
-    if (!product) {
-      throw new NotFoundException(`sản phẩm cùng giá tiền ${productId} không tồn tại`);
-    }
-    // tính khoảng giá sản phẩm
-    const basePrice = product.price;
-    const minPrice = basePrice * (1 - range / 100);
-    const maxPrice = basePrice * (1 + range / 100);
+  //  lấy sản phẩm trong khoảng giá
+ async GetProductsByCategory( filter:
+ {
+    categoryId: number; 
+    priceMin:number;
+    priceMax:number;
+    sort? : string;
+    page : number;
+    limit: number;
+})
+{
+  const query = this.productsRepository.createQueryBuilder('product')
 
-    // tìm sp trong khoảng giá đó
-    const products = await this.productsRepository.find({
-      where: {
-         id : productId,
-          status: 'active',
-          price:  Between (minPrice, maxPrice)  //  dùng dể so sánh giá trị 
-   
-      },
-      order : {
-        category_id: product.category_id ? 'ASC' : 'DESC',
-        price: 'ASC'  // sắp xếp gia theo giá trị tăng dần 
-      },
+   query.where('product.category_id = :categoryId', { categoryId: filter.categoryId });
 
-      take: limit
-    });
-    return products;
+
+    if (filter.priceMin !== undefined) {
+    query.andWhere('product.price >= :minPrice', { minPrice: filter.priceMin });
+  }
+  if (filter.priceMax !== undefined) {
+    query.andWhere('product.price <= :maxPrice', { maxPrice: filter.priceMax });
   }
 
+  // Sắp xếp
+  if (filter.sort === 'price_asc') {
+    query.orderBy('product.price', 'ASC');
+  } else if (filter.sort === 'price_desc') {
+    query.orderBy('product.price', 'DESC');
+  } else {
+    query.orderBy('product.created_at', 'DESC'); // mặc định sản phẩm mới nhất
+  }
+
+  // Phân trang
+  query.skip((filter.page - 1) * filter.limit).take(filter.limit);
+
+  // Lấy dữ liệu
+  const [data, total] = await query.getManyAndCount();
+  
+  return {
+    data,
+    total,
+    currentPage: filter.page,
+    totalPages: Math.ceil(total / filter.limit),
+  };
+}
 }

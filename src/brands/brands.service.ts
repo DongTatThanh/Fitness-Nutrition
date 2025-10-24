@@ -55,7 +55,8 @@ export class BrandsService {
 
   // Cập nhật logo_url cho brand
   async updateBrandImage(id: number, imageUrl: string): Promise<Brand> {
-    const brand = await this.brandsRepository.findOne({ where: { id } });
+    const brand = await this.brandsRepository.findOne
+    ({ where: { id } });
     
     if (!brand) {
       throw new NotFoundException(`Brand với ID ${id} không tồn tại`);
@@ -64,4 +65,16 @@ export class BrandsService {
     brand.logo_url = imageUrl;
     return await this.brandsRepository.save(brand);
   }
+
+
+  // lấy danh sách hãng sản suất
+
+    async findAllBrands(): Promise<Brand[]> {
+      return await this.brandsRepository.find
+      ({
+        where: { is_active: true  },
+        order: { name: "ASC" }
+      });
+    }
   }
+

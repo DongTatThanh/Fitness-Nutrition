@@ -22,5 +22,10 @@ export class BrandsController {
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.brandsService.findBrandWithProducts(id);
   }
+
+  @Get('all/brands')
+   async findAllBrands() {
+     return this.brandsService.findAllBrands(); 
+   }
 }
   

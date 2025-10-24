@@ -1,6 +1,7 @@
 import { Controller, Get, Query, Param, ParseIntPipe } from '@nestjs/common';    
 import { ProductsService } from './products.service';
 
+
 @Controller('products')
 export class ProductsController {
     constructor(private readonly productsService: ProductsService) {}
@@ -29,13 +30,24 @@ export class ProductsController {
         return this.productsService.findProductsId(id);
     }
 
-    // lấy sản phẩm cung phan khúc giá 
-    @Get(':id/similar-price')
-    async findSimilarPriceProducts(
-        @Param('id', ParseIntPipe) id: number
-    )
-    {
-        return this.productsService.findSimilarPriceProducts(id);
+    // lấy sản phẩm trong khoảng giá
+    
+    @Get(':categoryId/products')
+    async GetProductsByCategory(
+        @Param ('categoryId') categoryId: number,
+        @Query ('minPrice') PriceMin: number,
+        @Query ('maxPrice') PriceMax: number,
+        @Query('sort') sort?: string,
+        @Query('page') page: number = 1,
+        @Query('limit') limit: number = 12
+    ) {
+        return this.productsService.GetProductsByCategory({
+            categoryId,
+            priceMin: PriceMin,
+            priceMax: PriceMax,
+            sort,
+            page,
+            limit,
+        });
     }
 }
-        
