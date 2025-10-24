@@ -38,5 +38,15 @@ export class UsersService {
     if (!user) throw new Error('User not found after update');
     return user;
   }
+
+
+  // lấy thông tin user bằng user id
+      async findProfileById(id: number): Promise<User | null> 
+      {
+         return await this.usersRepo.findOne({
+            where: { user_id: id },
+            select: [ 'email', 'full_name', 'phone', 'created_at']
+         });
+      }
   
 }

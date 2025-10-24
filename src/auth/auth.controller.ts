@@ -74,8 +74,7 @@ export class AuthController {
   @Post('logout')
   @UseGuards(AuthGuard('jwt'))
   async logout(@Req() req: any) {
-    // In a stateless JWT system, logout is typically handled client-side
-    // by removing the token. Server-side could maintain a blacklist if needed.
+    
     return { message: 'Logged out successfully' };
   }
 

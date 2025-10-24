@@ -50,6 +50,7 @@ import { ProductViewModule } from './products/productView/productView.module';
     BannersModule,
     StoresModule,
     ProductViewModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
