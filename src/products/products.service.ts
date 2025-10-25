@@ -110,22 +110,21 @@ async findBestSellers(limit: number = 10): Promise<Product[]> {
     return product;
   }
   //  lấy sản phẩm trong khoảng giá
- async GetProductsByCategory( filter:
- {
-    categoryId: number; 
-    priceMin:number;
-    priceMax:number;
-    sort? : string;
-    page : number;
-    limit: number;
-})
-{
-  const query = this.productsRepository.createQueryBuilder('product')
+ async getProductsByCategory(filter: {
+  categoryId: number;
+  priceMin?: number;
+  priceMax?: number;
+  sort?: string;
+  page: number;
+  limit: number;
+}) {
+  const query = this.productsRepository.createQueryBuilder('product');
 
-   query.where('product.category_id = :categoryId', { categoryId: filter.categoryId });
+  // Lọc theo danh mục
+  query.where('product.category_id = :categoryId', { categoryId: filter.categoryId });
 
-
-    if (filter.priceMin !== undefined) {
+  // Lọc theo khoảng giá
+  if (filter.priceMin !== undefined) {
     query.andWhere('product.price >= :minPrice', { minPrice: filter.priceMin });
   }
   if (filter.priceMax !== undefined) {
@@ -133,20 +132,23 @@ async findBestSellers(limit: number = 10): Promise<Product[]> {
   }
 
   // Sắp xếp
-  if (filter.sort === 'price_asc') {
-    query.orderBy('product.price', 'ASC');
-  } else if (filter.sort === 'price_desc') {
-    query.orderBy('product.price', 'DESC');
-  } else {
-    query.orderBy('product.created_at', 'DESC'); // mặc định sản phẩm mới nhất
+  switch (filter.sort) {
+    case 'price_asc':
+      query.orderBy('product.price', 'ASC');
+      break;
+    case 'price_desc':
+      query.orderBy('product.price', 'DESC');
+      break;
+    default:
+      query.orderBy('product.created_at', 'DESC');
+      break;
   }
 
   // Phân trang
   query.skip((filter.page - 1) * filter.limit).take(filter.limit);
 
-  // Lấy dữ liệu
   const [data, total] = await query.getManyAndCount();
-  
+
   return {
     data,
     total,
