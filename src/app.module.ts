@@ -18,6 +18,7 @@ import { FlashSalesModule } from './flash_sales/flash-_ales.module';
 import { BannersModule } from './banners/banner.module';
 import { StoresModule } from './stores/stores.module';
 import { ProductViewModule } from './products/productView/productView.module';
+import { CartModule } from './cart/cart.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { ProductViewModule } from './products/productView/productView.module';
     StoresModule,
     ProductViewModule,
     UsersModule,
+    CartModule,
   ],
   controllers: [AppController],
   providers: [AppService],
