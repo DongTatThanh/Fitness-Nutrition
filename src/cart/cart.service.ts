@@ -19,7 +19,7 @@ export class CartService {
     // lấy giỏ hàng theo ID người dùng
     async getCartItemsByUserId(userId: number) {
       
-        const cart = await this.cartRepository.findOne({
+        const cart = await this.cartRepository.find({
             where: { user_id: userId } ,
             relations: ['items', 'items.product', 'items.product.brand'],
         });

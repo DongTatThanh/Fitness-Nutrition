@@ -1,5 +1,7 @@
 import { Controller, Get, Query, Param, ParseIntPipe } from '@nestjs/common';    
 import { ProductsService } from './products.service';
+import { get } from 'http';
+
 
 
 @Controller('products')
@@ -25,7 +27,18 @@ export class ProductsController {
     async findBestSellers(@Query('limit') limit?: number
 ) {
         return this.productsService.findBestSellers(limit ? +limit : 10);
+        
     }
+     //    sắp xếp sản phẩm theo giá tên ...
+      
+      @Get('sort')
+         async sortProducts(@Param('sort') sort: string) 
+          {
+            return this.productsService.sortProducts(sort);
+
+         }
+      
+        
 
     // Lấy chi tiết sản phẩm theo ID
     @Get(':id')
@@ -54,4 +67,5 @@ async getProductsByCategory(
     limit: Number(limit),
   });
 }
-}   
+
+}

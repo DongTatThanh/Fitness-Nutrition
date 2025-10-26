@@ -1,8 +1,9 @@
+import { Product } from 'src/products/product.entity';
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Between, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Product } from './product.entity';
+
 import { promises } from 'dns';
 import { Category } from 'src/categories/category.entity';
 import e from 'express';
@@ -155,5 +156,32 @@ async findBestSellers(limit: number = 10): Promise<Product[]> {
     currentPage: filter.page,
     totalPages: Math.ceil(total / filter.limit),
   };
+}
+
+// sắp xếp sản phẩm theo giá và bảng chữ cái 
+
+async sortProducts(sort?: string): Promise<Product[]> {
+  let order : any = {};
+  switch (sort) {
+    case 'name_asc':
+      order = { name: 'ASC' };
+      break;
+    case 'name_desc':
+      order = { name: 'DESC' };
+      break;
+
+  case 'price_asc': 
+      order = { price: 'ASC' };
+      break;  
+  case 'price_desc':
+      order = { price: 'DESC' };
+      break;
+    default:
+      order = { created_at: 'DESC' };
+  }
+
+  return this.productsRepository.find({
+    order,
+  });
 }
 }
