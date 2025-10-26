@@ -32,7 +32,7 @@ export class ProductsController {
      //    sắp xếp sản phẩm theo giá tên ...
       
       @Get('sort')
-         async sortProducts(@Param('sort') sort: string) 
+         async sortProducts(@Query('sort') sort: string) 
           {
             return this.productsService.sortProducts(sort);
 
@@ -54,7 +54,7 @@ async getProductsByCategory(
   @Param('categoryId') categoryId: number,
   @Query('minPrice') minPrice?: string,
   @Query('maxPrice') maxPrice?: string,
-  @Query('sort') sort?: string,
+  @Query('sort') sort?: string, 
   @Query('page') page: string = '1',
   @Query('limit') limit: string = '12',
 ) {
