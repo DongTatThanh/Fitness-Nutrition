@@ -1,7 +1,8 @@
+import { Cart } from './../cart/cart.entity';
 import { Product } from 'src/products/product.entity';
 
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Between, Repository } from 'typeorm';
+import { Between, Repository, PrimaryGeneratedColumn } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { promises } from 'dns';
@@ -140,6 +141,12 @@ async findBestSellers(limit: number = 10): Promise<Product[]> {
     case 'price_desc':
       query.orderBy('product.price', 'DESC');
       break;
+    case 'name_asc':
+      query.orderBy('product.name', 'ASC');
+      break;
+    case 'name_desc':
+      query.orderBy('product.name', 'DESC');
+      break;
     default:
       query.orderBy('product.created_at', 'DESC');
       break;
@@ -158,30 +165,5 @@ async findBestSellers(limit: number = 10): Promise<Product[]> {
   };
 }
 
-// sắp xếp sản phẩm theo giá và bảng chữ cái 
 
-async sortProducts(sort?: string): Promise<Product[]> {
-  let order : any = {};
-  switch (sort) {
-    case 'name_asc':
-      order = { name: 'ASC' };
-      break;
-    case 'name_desc':
-      order = { name: 'DESC' };
-      break;
-
-  case 'price_asc': 
-      order = { price: 'ASC' };
-      break;  
-  case 'price_desc':
-      order = { price: 'DESC' };
-      break;
-    default:
-      order = { created_at: 'DESC' };
-  }
-
-  return this.productsRepository.find({
-    order,
-  });
-}
 }

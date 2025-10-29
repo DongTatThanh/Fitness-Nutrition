@@ -30,14 +30,7 @@ export class ProductsController {
         
     }
      //    sắp xếp sản phẩm theo giá tên ...
-      
-      @Get('sort')
-         async sortProducts(@Query('sort') sort: string) 
-          {
-            return this.productsService.sortProducts(sort);
-
-         }
-      
+  
         
 
     // Lấy chi tiết sản phẩm theo ID
