@@ -14,21 +14,26 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('login')
-  async login(@Body() dto: LoginDto) {
+  async login(@Body() dto: LoginDto) 
+  {
     const user = await this.authService.validateUser(dto.email, dto.password);
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!user) throw new UnauthorizedException('Invalid email or password');
     return this.authService.login(user);
   }
 
   @Post('register')
-  async register(@Body() dto: any) {
+  async register(@Body() dto: any) 
+
+  {
     console.log(' RAW Register request body:', dto);
     console.log(' RAW Data types:', {
       email: typeof dto.email,
       password: typeof dto.password,
       full_name: typeof dto.full_name
     });
-    console.log(' RAW Data values:', {
+    console.log(' RAW Data values:', 
+      
+      {
       email: dto.email,
       password: dto.password?.length ? `[${dto.password.length} chars]` : 'empty/undefined',
       full_name: dto.full_name
@@ -42,15 +47,19 @@ export class AuthController {
     registerDto.full_name = dto.full_name;
     
     return this.authService.register(registerDto);
+
   }
 
   @Post('forgot-password')
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.requestPasswordReset(dto.email);
+
   }
 
   @Post('reset-password')
-  async resetPassword(@Body() dto: ResetPasswordDto) {
+
+  async resetPassword(@Body() dto: ResetPasswordDto)
+   {
     console.log(' Reset password request:', { otp: dto.otp, passwordLength: dto.newPassword?.length });
     
     if (!dto.otp || !dto.newPassword) {
@@ -60,7 +69,9 @@ export class AuthController {
   }
 
   @Post('verify-otp')
-  async verifyOtp(@Body() dto: any) {
+  async verifyOtp(@Body() dto: any) 
+  
+  {
     console.log(' Verify OTP only request:', { otp: dto.otp, email: dto.email });
     
     if (!dto.otp) {
