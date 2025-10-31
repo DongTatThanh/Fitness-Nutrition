@@ -17,7 +17,7 @@ export class AuthController {
   async login(@Body() dto: LoginDto) 
   {
     const user = await this.authService.validateUser(dto.email, dto.password);
-    if (!user) throw new UnauthorizedException('Invalid email or password');
+    if (!user) throw new UnauthorizedException('Email hoặc mật khẩu không đúng vui lòng thử lại:');
     return this.authService.login(user);
   }
 
@@ -102,7 +102,7 @@ export class AuthController {
     if (updateData.email && updateData.email !== req.user.email) {
       const existingUser = await this.authService.findByEmail(updateData.email);
       if (existingUser) {
-        throw new BadRequestException('Email already in use');
+        throw new BadRequestException('Email đã được sử dụng');
       }
     }
     
