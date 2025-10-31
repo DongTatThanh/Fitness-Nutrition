@@ -7,7 +7,7 @@ export class PasswordReset {
 
   @Column()
   user_id: number;
-
+  
   @Column()
   token: string;
 

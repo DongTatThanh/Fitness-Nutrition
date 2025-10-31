@@ -28,13 +28,15 @@ export class AuthService {
 
   async login(user: any) {
     const payload = { sub: user.user_id, email: user.email, role: (user.role || 'user') };
+    console.log(' Generating JWT for user:', user.email, 'with payload:', payload);
     return {
       access_token: this.jwtService.sign(payload),
     };
   }
   
 
-  async register(createUserDto: any) {
+  async register(createUserDto: any) 
+  {
     const existing = await this.usersService.findByEmail(createUserDto.email);
     if (existing) {
       throw new ConflictException('Email already in use');
@@ -61,7 +63,8 @@ export class AuthService {
     return this.login(user);
   }
 
-  async requestPasswordReset(email: string) {
+  async requestPasswordReset(email: string) 
+  {
     const user = await this.usersService.findByEmail(email);
     if (!user) throw new NotFoundException('email không tồn tại trong database');
     
@@ -169,7 +172,8 @@ export class AuthService {
     const filteredData = {};
     
     // Only allow updating specific fields
-    allowedFields.forEach(field => {
+    allowedFields.forEach(field =>
+       {
       if (updateData[field] !== undefined) {
         filteredData[field] = updateData[field];
       }
