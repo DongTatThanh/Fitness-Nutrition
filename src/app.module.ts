@@ -19,6 +19,7 @@ import { BannersModule } from './banners/banner.module';
 import { StoresModule } from './stores/stores.module';
 import { ProductViewModule } from './products/productView/productView.module';
 import { CartModule } from './cart/cart.module';
+import { MenuModule } from './menus/menu.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { CartModule } from './cart/cart.module';
     ProductViewModule,
     UsersModule,
     CartModule,
+    MenuModule,
   ],
   controllers: [AppController],
   providers: [AppService],
