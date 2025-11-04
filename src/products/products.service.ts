@@ -1,3 +1,4 @@
+import { Brand } from './../brands/brand.entity';
 import { Cart } from './../cart/cart.entity';
 import { Product } from 'src/products/product.entity';
 
@@ -22,7 +23,7 @@ export class ProductsService {
     async findAll(): Promise<Product[]> {
       return await this.productsRepository.find({
         order: {
-          created_at: 'DESC'   /// sắp xêp theo thứ tự tăng dần cũ mới ....
+          created_at: 'DESC'   
         }   
       });
     }
@@ -36,7 +37,7 @@ export class ProductsService {
     .leftJoinAndSelect('product.category', 'category')
     .where('product.compare_price > product.price')
     .andWhere('product.compare_price IS NOT NULL')
-    .addOrderBy('(product.compare_price - product.price) / product.price', 'DESC')
+    .addOrderBy('(product.compare_price - product.price) / product.price', 'DESC') // sản phẩm nào discount lớn hơn sẽ xếp đầu 
     .limit(limit)
     .getMany();
 }
@@ -111,29 +112,33 @@ async findBestSellers(limit: number = 10): Promise<Product[]> {
 
     return product;
   }
-  //  lấy sản phẩm trong khoảng giá
+  //  lấy sản phẩm trong khoảng giá , sắp xếp, 
  async getProductsByCategory(filter: {
   categoryId: number;
   priceMin?: number;
   priceMax?: number;
+  brandId?: number;
   sort?: string;
   page: number;
   limit: number;
 }) {
   const query = this.productsRepository.createQueryBuilder('product');
 
-  // Lọc theo danh mục
+  
   query.where('product.category_id = :categoryId', { categoryId: filter.categoryId });
 
-  // Lọc theo khoảng giá
+  
   if (filter.priceMin !== undefined) {
     query.andWhere('product.price >= :minPrice', { minPrice: filter.priceMin });
   }
   if (filter.priceMax !== undefined) {
     query.andWhere('product.price <= :maxPrice', { maxPrice: filter.priceMax });
   }
+  if (filter.brandId !== undefined) {
+    query.andWhere('product.brand_id = :brandId', { brandId: filter.brandId });
+  }
 
-  // Sắp xếp
+
   switch (filter.sort) {
     case 'price_asc':
       query.orderBy('product.price', 'ASC');
@@ -152,7 +157,6 @@ async findBestSellers(limit: number = 10): Promise<Product[]> {
       break;
   }
 
-  // Phân trang
   query.skip((filter.page - 1) * filter.limit).take(filter.limit);
 
   const [data, total] = await query.getManyAndCount();

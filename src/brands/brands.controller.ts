@@ -11,7 +11,7 @@ export class BrandsController {
     return this.brandsService.findBrandAll();
   }
   @Get(':featured')
-  async findFeaturedBrands(@Param('featured') featured: boolean) {
+  async findFeaturedBrands(@Param('featured') featured: string) {
 
       return this.brandsService.findFeaturedBrands();
 

@@ -1,10 +1,10 @@
-import { Controller } from "@nestjs/common";
-import { PaymentService } from "./payment.service";
+// import { Controller } from "@nestjs/common";
+// import { PaymentService } from "./payment.service";
 
 
-@Controller()
-export class PaymentController {
-    constructor(private paymentService: PaymentService) {
+// @Controller()
+// export class PaymentController {
+//     constructor(private paymentService: PaymentService) {
         
-    }
-}
+//     }
+// }

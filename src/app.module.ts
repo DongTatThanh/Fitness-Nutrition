@@ -20,7 +20,7 @@ import { StoresModule } from './stores/stores.module';
 import { ProductViewModule } from './products/productView/productView.module';
 import { CartModule } from './cart/cart.module';
 import { MenuModule } from './menus/menu.module';
-import { PaymentModule } from './payment/payment.module';
+// import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -56,7 +56,7 @@ import { PaymentModule } from './payment/payment.module';
     UsersModule,
     CartModule,
     MenuModule,
-    PaymentModule,
+    // PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
