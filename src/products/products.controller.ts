@@ -45,7 +45,7 @@ export class ProductsController {
     
   @Get(':categoryId/products')
 async getProductsByCategory(
-  @Param('categoryId') categoryId: number,
+  @Query('categoryId') categoryId: number,
   @Query('isFlashSale') isFlashSale?: boolean,
   
   @Query('minPrice') minPrice?: string,
