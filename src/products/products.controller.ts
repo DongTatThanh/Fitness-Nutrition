@@ -29,22 +29,25 @@ export class ProductsController {
         return this.productsService.findBestSellers(limit ? +limit : 10);
         
     }
-     //    sắp xếp sản phẩm theo giá tên ...
-  
-        
 
+  
     // Lấy chi tiết sản phẩm theo ID
     @Get(':id')
     async findProductsId(@Param('id', ParseIntPipe) id: number) 
     {
         return this.productsService.findProductsId(id);
     }
+
+        
+
     
-    // lấy sản phẩm trong khoảng giá
+    // lấy sản phẩm trong khoảng giá cho category
     
   @Get(':categoryId/products')
 async getProductsByCategory(
   @Param('categoryId') categoryId: number,
+  @Query('isFlashSale') isFlashSale?: boolean,
+  
   @Query('minPrice') minPrice?: string,
   @Query('maxPrice') maxPrice?: string,
   @Query('brandId') brandId?: string,
@@ -54,6 +57,33 @@ async getProductsByCategory(
 ) {
   return this.productsService.getProductsByCategory({
     categoryId: Number(categoryId),
+    isFlashSale: isFlashSale,
+    priceMin: minPrice ? Number(minPrice) : undefined,
+    priceMax: maxPrice ? Number(maxPrice) : undefined,
+    brandId: brandId ? Number(brandId) : undefined,
+    sort,
+    page: Number(page),
+    limit: Number(limit),
+
+  });
+
+  
+
+
+  }
+  @Get('flashSaleSort/Products')
+async getProductFlashSale(
+  @Query('isFlashSale') isFlashSale?: boolean,
+  @Query('minPrice') minPrice?: string,
+  @Query('maxPrice') maxPrice?: string,
+  @Query('brandId') brandId?: string,
+  @Query('sort') sort?: string,
+  @Query('page') page: string = '1',
+  @Query('limit') limit: string = '12',
+) {
+  return this.productsService.getProductsByCategory({
+    categoryId: 0,
+    isFlashSale,
     priceMin: minPrice ? Number(minPrice) : undefined,
     priceMax: maxPrice ? Number(maxPrice) : undefined,
     brandId: brandId ? Number(brandId) : undefined,
@@ -63,4 +93,13 @@ async getProductsByCategory(
   });
 }
 
+
+
+
+
+
 }
+
+
+ 
+

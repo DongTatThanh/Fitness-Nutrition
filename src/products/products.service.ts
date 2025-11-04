@@ -1,3 +1,4 @@
+import { FlashSale } from './../flash_sales/flash-sale.entity';
 import { Brand } from './../brands/brand.entity';
 import { Cart } from './../cart/cart.entity';
 import { Product } from 'src/products/product.entity';
@@ -115,6 +116,7 @@ async findBestSellers(limit: number = 10): Promise<Product[]> {
   //  lấy sản phẩm trong khoảng giá , sắp xếp, 
  async getProductsByCategory(filter: {
   categoryId: number;
+  isFlashSale?: boolean;
   priceMin?: number;
   priceMax?: number;
   brandId?: number;
@@ -124,10 +126,12 @@ async findBestSellers(limit: number = 10): Promise<Product[]> {
 }) {
   const query = this.productsRepository.createQueryBuilder('product');
 
-  
-  query.where('product.category_id = :categoryId', { categoryId: filter.categoryId });
+  if (filter.categoryId) {
+    query.where('product.category_id = :categoryId', { categoryId: filter.categoryId });
+  } else if (filter.isFlashSale) {
+    query.where('product.is_flash_sale = true');
+  }
 
-  
   if (filter.priceMin !== undefined) {
     query.andWhere('product.price >= :minPrice', { minPrice: filter.priceMin });
   }
