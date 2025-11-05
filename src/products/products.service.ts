@@ -1,15 +1,9 @@
-import { FlashSale } from './../flash_sales/flash-sale.entity';
-import { Brand } from './../brands/brand.entity';
-import { Cart } from './../cart/cart.entity';
+
 import { Product } from 'src/products/product.entity';
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Between, Repository, PrimaryGeneratedColumn } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-
-import { promises } from 'dns';
-import { Category } from 'src/categories/category.entity';
-import e from 'express';
 
 
 
