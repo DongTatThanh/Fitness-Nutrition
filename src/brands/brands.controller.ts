@@ -6,12 +6,18 @@ import { BrandsService } from "./brands.service";
 export class BrandsController {
   constructor(private readonly brandsService: BrandsService) {}
 
+
+     // lấy tất cả các thương hiệu 
   @Get()
-  async findAll() {
+  async findAll() 
+  {
     return this.brandsService.findBrandAll();
   }
+    
+   // lấy tất cả các thương hiệu nổi bật 
   @Get(':featured')
-  async findFeaturedBrands(@Param('featured') featured: string) {
+  async findFeaturedBrands(@Param('featured') featured: string)
+   {
 
       return this.brandsService.findFeaturedBrands();
 

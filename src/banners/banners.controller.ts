@@ -40,11 +40,11 @@ export class BannersController {
     return this.bannersService.findBannerById(id);
   }
 
-  // POST /banners - Tạo banner mới
-  @Post()
-  async create(@Body() bannerData: Partial<Banner>) {
-    return this.bannersService.createBanner(bannerData);
-  }
+  // // POST /banners - Tạo banner mới
+  // @Post()
+  // async create(@Body() bannerData: Partial<Banner>) {
+  //   return this.bannersService.createBanner(bannerData);
+  // }
 
   // PUT /banners/:id - Cập nhật banner (với upload ảnh)
   @Put(':id')
@@ -74,13 +74,15 @@ export class BannersController {
       body.image_url = `/uploads/banners/${file.filename}`;
     }
 
-    return await this.bannersService.updateBanner(id, body);
-  }
+//     return await this.bannersService.updateBanner(id, body);
+//   }
 
-  // DELETE /banners/:id - Xóa banner
-  @Delete(':id')
-  async delete(@Param('id', ParseIntPipe) id: number) {
-    await this.bannersService.deleteBanner(id);
-    return { message: 'Banner deleted successfully' };
+//   // DELETE /banners/:id - Xóa banner
+//   @Delete(':id')
+//   async delete(@Param('id', ParseIntPipe) id: number) {
+//     await this.bannersService.deleteBanner(id);
+//     return { message: 'Banner deleted successfully' };
+//   }
+// 
   }
 }

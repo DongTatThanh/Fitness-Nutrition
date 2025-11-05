@@ -31,7 +31,7 @@ export class ProductsService {
     .leftJoinAndSelect('product.brand', 'brand')
     .leftJoinAndSelect('product.category', 'category')
     .where('product.compare_price > product.price')
-    .andWhere('product.compare_price IS NOT NULL')
+    .andWhere('product.compare_price IS NOT NULL')// không có giá gốc thì bỏ qua 
     .addOrderBy('(product.compare_price - product.price) / product.price', 'DESC') // sản phẩm nào discount lớn hơn sẽ xếp đầu 
     .limit(limit)
     .getMany();
@@ -58,7 +58,7 @@ async findBestSellers(limit: number = 10): Promise<Product[]> {
       'category.id',
       'category.name'
     ])
-    .addSelect('COALESCE(SUM(oi.quantity), 0)', 'total_sold')
+    .addSelect('COALESCE(SUM(oi.quantity), 0)', 'total_sold')  // tổng số lượng đã bán
     .where('o.status IN (:...statuses)', { 
       statuses: ['completed', 'delivered', 'processing'] 
     })
@@ -68,7 +68,7 @@ async findBestSellers(limit: number = 10): Promise<Product[]> {
     .orderBy('total_sold', 'DESC')
     .addOrderBy('product.created_at', 'DESC')
     .limit(limit)
-    .getRawAndEntities();
+    .getRawAndEntities();   // trả về các ánh xạ  và sql 
   
   return result.entities;
 }
@@ -89,6 +89,7 @@ async findBestSellers(limit: number = 10): Promise<Product[]> {
 
   // lấy chi tiết sản phẩm theo id
   async findProductsId(productId: number): Promise<Product> {
+    
     const product = await this.productsRepository.findOne({
       where: {
         id: productId,
