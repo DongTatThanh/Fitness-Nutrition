@@ -45,7 +45,7 @@ export class ProductsController {
     
   @Get(':categoryId/products')
 async getProductsByCategory(
-  @Query('categoryId') categoryId: number,
+  @Param('categoryId') categoryId: string,
   @Query('isFlashSale') isFlashSale?: boolean,
   
   @Query('minPrice') minPrice?: string,
@@ -70,36 +70,5 @@ async getProductsByCategory(
   
 
 
-  }
-  @Get('flashSaleSort/Products')
-async getProductFlashSale(
-  @Query('isFlashSale') isFlashSale?: boolean,
-  @Query('minPrice') minPrice?: string,
-  @Query('maxPrice') maxPrice?: string,
-  @Query('brandId') brandId?: string,
-  @Query('sort') sort?: string,
-  @Query('page') page: string = '1',
-  @Query('limit') limit: string = '12',
-) {
-  return this.productsService.getProductsByCategory({
-    categoryId: 0,
-    isFlashSale,
-    priceMin: minPrice ? Number(minPrice) : undefined,
-    priceMax: maxPrice ? Number(maxPrice) : undefined,
-    brandId: brandId ? Number(brandId) : undefined,
-    sort,
-    page: Number(page),
-    limit: Number(limit),
-  });
 }
-
-
-
-
-
-
 }
-
-
- 
-

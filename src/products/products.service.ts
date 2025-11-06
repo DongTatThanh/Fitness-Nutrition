@@ -79,7 +79,7 @@ async findBestSellers(limit: number = 10): Promise<Product[]> {
       where: { id: productId }
     });
 
-    if (!product) {
+        if (!product) {
       throw new NotFoundException(`Product với ID ${productId} không tồn tại`);
     }
 
@@ -112,6 +112,7 @@ async findBestSellers(limit: number = 10): Promise<Product[]> {
  async getProductsByCategory(filter: {
   categoryId: number;
   isFlashSale?: boolean;
+
   priceMin?: number;
   priceMax?: number;
   brandId?: number;
@@ -121,11 +122,11 @@ async findBestSellers(limit: number = 10): Promise<Product[]> {
 }) {
   const query = this.productsRepository.createQueryBuilder('product');
 
-  if (filter.categoryId) {
-    query.where('product.category_id = :categoryId', { categoryId: filter.categoryId });
-  } else if (filter.isFlashSale) {
-    query.where('product.is_flash_sale = true');
-  }
+if (filter.categoryId) {
+   query.where('product.category_id = :categoryId', { categoryId: filter.categoryId });
+} else {
+  query.where('product.category_id = :categoryId', { categoryId: filter.categoryId });
+}
 
   if (filter.priceMin !== undefined) {
     query.andWhere('product.price >= :minPrice', { minPrice: filter.priceMin });

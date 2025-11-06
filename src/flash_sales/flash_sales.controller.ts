@@ -142,7 +142,7 @@ export class FlashSalesController {
       case 'price_asc':
         products.sort((a, b) => a.flash_sale.sale_price - b.flash_sale.sale_price);
         break;
-      case 'price_desc':
+      case 'price_desc':  
         products.sort((a, b) => b.flash_sale.sale_price - a.flash_sale.sale_price);
         break;  
       case 'name_asc':
