@@ -129,4 +129,47 @@ export class CartService {
                 ((count, item) => count + item.quantity, 0),
             };
             }
+
+    //  xóa sản phẩm khỏi giỏ hàng 
+    async removeItemFromCart(user_id: number, CartItem_id: number) 
+    {
+        const cartItem = await this.cartItemRepository.findOne({
+            where: { id: CartItem_id  , 
+            cart: { user_id: user_id }},
+        
+            relations: ['cart'],
+        });
+        
+        if (!cartItem) 
+            {
+            throw new NotFoundException(`Sản phẩm với ID ${CartItem_id} không tồn tại trong giỏ hàng.`);
+            }
+
+            // xóa cart item
+            await this.cartItemRepository.remove(cartItem);
+            return this.getcart(user_id);
+    }
+
+    // cập nhật lại số lượng sản phẩm trong giỏ hàng
+
+    async updateCartItemQuantity(user_id: number, CartItem_id: number, quantity: number) 
+    {
+        const cartItem = await this .cartItemRepository.findOne(
+            {
+            where: { id: CartItem_id ,
+             cart: { user_id: user_id } },
+            relations: ['cart', 'product'],
+        });
+
+        if (!cartItem) 
+            {
+            throw new NotFoundException(`Sản phẩm với ID ${CartItem_id} không tồn tại trong giỏ hàng.`);
+        }
+
+        cartItem.quantity = quantity;
+        await this.cartItemRepository.save(cartItem);
+
+        return this.getcart(user_id);
+
+    }
 }
