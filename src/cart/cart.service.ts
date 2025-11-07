@@ -1,3 +1,5 @@
+
+
 import { User } from './../users/user.entity';
 import { Cart } from './cart.entity';
 import { Injectable, NotFoundException } from '@nestjs/common';
@@ -6,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CartItem } from './cart_Item.entity';
 import { Product } from '../products/product.entity';
 import { AddToCartDto } from './DTO/cart.dto.entity';
+import { ProductVariant } from 'src/products/product-variant.entity';
 
 
 
@@ -50,12 +53,80 @@ export class CartService {
             if (!product) {
                 throw new NotFoundException(`Sản phẩm với ID ${AddToCartDto.product_id} không tồn tại hoặc không hoạt động.`);
             }
-     //  kiểm tra tồn kho 
-            // if (product.stock_quantity < AddToCartDto.quantity) {
-            //     throw new NotFoundException(`Sản phẩm với ID ${AddToCartDto.product_id} không đủ số lượng trong kho.`);
-            // }
+     //   kiểm tra tồn kho 
+            if (product.inventory_quantity < AddToCartDto.quantity) {
+                throw new NotFoundException(`Sản phẩm với ID ${AddToCartDto.product_id} không đủ số lượng trong kho.`);
+            }
 
-            return product;
+            // tìm nếu không có thì tại mới giỏ hàng cho user
+            
+            let cart = await this.cartRepository.findOne({  // const không cho gán lại biến 
+                where: { user_id: user_id },
+                relations: ['items', 'items.product'],
+                    }); 
+            
+            if (!cart) {
+                cart = this .cartRepository.create({ user_id: user_id });
+            
+                cart = await this.cartRepository.save(cart);
+            }
 
-}   
+
+            // kiểm tra sản phẩm đã có trong giỏ hàng chưa
+
+            const existingItem = await this.cartItemRepository.findOne({
+                where: {
+                     cart_id: cart.id,
+                     product: { id: AddToCartDto.product_id },
+                   },
+            });
+
+            if (existingItem) {
+
+                // cập nhật số lượng nếu sản phẩm đã tồn tại trong giỏ hàng 
+
+                existingItem.quantity += AddToCartDto.quantity;
+                await this.cartItemRepository.save(existingItem);
+            } else {
+
+                // tạo mới nếu sản phẩm chưa có trong giỏ hàng 
+
+                const cartItem  = this.cartItemRepository.create({
+                    cart_id : cart.id, 
+                    product: product,
+                    variant: AddToCartDto.variant ? { id: AddToCartDto.variant } as any : undefined,
+                    quantity: AddToCartDto.quantity,
+                    price: product.price,
+                });
+                await this.cartItemRepository.save(cartItem);
+            }
+
+            return  this.getcart(user_id);
+        }
+
+        async getcart(user_id: number) {
+            const cart = await this.cartRepository.findOne({
+                where: { user_id: user_id },
+                relations: ['items',
+                     'items.product',
+                     
+                    'items.product.brand'],
+            }); 
+            if (!cart) {
+               return { items: [], total: 0 };
+
+            }
+        // tính tổng tiền cho giỏ hàng 
+        const total = cart.items.reduce
+        ((sum, item) => sum + item.price * item.quantity, 0);
+          
+        return {
+
+                items: cart.items,
+                total,
+                
+                itemCount: cart.items.reduce
+                ((count, item) => count + item.quantity, 0),
+            };
+            }
 }

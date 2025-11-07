@@ -8,7 +8,7 @@ export class AddToCartDto {
 
   @IsOptional()
   @IsNumber()
-  variant_id?: number;
+  variant?: number;
 
   @IsNumber()
   @Min(1)
