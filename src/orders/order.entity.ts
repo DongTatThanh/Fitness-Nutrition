@@ -1,25 +1,12 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { User } from '../users/user.entity';
 import { OrderItem } from './orderItem.entity';
+import { OrderStatus } from './enum/order-status.enum';
+import { PaymentStatus } from './enum/payment-status.enum';
 
 
 
-export enum OrderStatus {
-    PENDING = 'pending',
-    CONFIRMED = 'confirmed',
-    PROCESSING = 'processing',
-    SHIPPED = 'shipped',
-    DELIVERED = 'delivered',
-    CANCELLED = 'cancelled',
-    REFUNDED = 'refunded'
-}
 
-export enum PaymentStatus {
-    PENDING = 'pending',
-    PAID = 'paid',
-    FAILED = 'failed',
-    REFUNDED = 'refunded'
-}
 
 @Entity('orders')
 export class Order {

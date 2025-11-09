@@ -8,9 +8,10 @@ import { CartItem } from './cart_Item.entity';
 import { Cart } from './cart.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Product } from 'src/products/product.entity';
+import { Order } from 'src/orders/order.entity';
 
 @Module({
-      imports: [TypeOrmModule.forFeature([Cart, CartItem ,Product])],
+      imports: [TypeOrmModule.forFeature([Cart, CartItem ,Product ])],
     controllers: [CartController],
     providers: [CartService, ],
     exports: [CartService ],

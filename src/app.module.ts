@@ -20,6 +20,8 @@ import { StoresModule } from './stores/stores.module';
 import { ProductViewModule } from './products/productView/productView.module';
 import { CartModule } from './cart/cart.module';
 import { MenuModule } from './menus/menu.module';
+import { OrderModule } from './orders/order.module';
+
 // import { PaymentModule } from './payment/payment.module';
 
 @Module({
@@ -56,6 +58,7 @@ import { MenuModule } from './menus/menu.module';
     UsersModule,
     CartModule,
     MenuModule,
+    OrderModule,
     // PaymentModule,
   ],
   controllers: [AppController],
