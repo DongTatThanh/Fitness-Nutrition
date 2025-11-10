@@ -21,6 +21,7 @@ import { ProductViewModule } from './products/productView/productView.module';
 import { CartModule } from './cart/cart.module';
 import { MenuModule } from './menus/menu.module';
 import { OrderModule } from './orders/order.module';
+import { PaymentModule } from './payment/payment.module';
 
 // import { PaymentModule } from './payment/payment.module';
 
@@ -59,6 +60,7 @@ import { OrderModule } from './orders/order.module';
     CartModule,
     MenuModule,
     OrderModule,
+    PaymentModule,
     // PaymentModule,
   ],
   controllers: [AppController],
