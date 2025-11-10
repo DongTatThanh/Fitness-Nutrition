@@ -21,7 +21,9 @@
     "test:db": "node scripts/test-db-connection.js"
   },
   "dependencies": {
+    "@nestjs/axios": "^4.0.1",
     "@nestjs/common": "^11.0.1",
+    "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/passport": "^11.0.5",
@@ -29,6 +31,7 @@
     "@nestjs/serve-static": "^5.0.4",
     "@nestjs/typeorm": "^11.0.0",
     "@prisma/client": "^6.16.3",
+    "axios": "^1.13.2",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.3.1",
     "multer": "^2.0.2",

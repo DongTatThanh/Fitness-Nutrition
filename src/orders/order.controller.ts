@@ -29,7 +29,7 @@ export class OrderController {
         @Request() req,
         @Query('status') status?: OrderStatus
     ) {
-        const userId = req.user?.id || 1;
+        const userId = req.user?.id ;
         return this.orderService.getOrdersByUser(userId, status);
     }
 
@@ -41,7 +41,7 @@ export class OrderController {
         @Request() req,
         @Param('id', ParseIntPipe)orderId: number
     ) {
-        const userId = req.user?.id || 1;
+        const userId = req.user?.id ;
         return this.orderService.getOrderById(orderId, userId);
     }
 
@@ -51,7 +51,7 @@ export class OrderController {
         @Request() req,
         @Param('order_number') orderNumber: string
     ) {
-        const userId = req.user?.id || 1;
+        const userId = req.user?.id ;
         return this.orderService.getOrderByNumber(orderNumber, userId);
     }
 }
