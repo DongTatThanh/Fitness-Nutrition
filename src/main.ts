@@ -50,7 +50,7 @@ async function bootstrap() {
   }));
 
   const port = process.env.PORT ?? 3201;
-  const host = process.env.HOST ?? '0.0.0.0'; // Listen on all interfaces
+  const host = process.env.HOST ?? '0.0.0.0'; 
   
   await app.listen(port, host);
   console.log(` Server running on http://${host}:${port}`);

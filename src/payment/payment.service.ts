@@ -64,7 +64,34 @@ export class PaymentService {
 
     // Tạo QR code 
     generateQRCode(amount: number, content: string): string {
-        return `https://img.vietqr.io/image/${this.bankCode}-${this.accountNumber}-compact2.jpg?amount=${amount}&addInfo=${encodeURIComponent(content)}&accountName=${encodeURIComponent(this.accountName)}`;
+        // VietQR API v2 - hỗ trợ tất cả ngân hàng Việt Nam
+        const bankBin = this.getBankBin(this.bankCode);
+        const accountNo = this.accountNumber;
+        const accountName = this.accountName;
+        const amountValue = Math.round(amount); // VietQR không chấp nhận số thập phân
+        const addInfo = encodeURIComponent(content);
+        
+        // Template: compact2 (nhỏ gọn), print (in ấn), qr_only (chỉ mã QR)
+        return `https://img.vietqr.io/image/${bankBin}-${accountNo}-compact2.jpg?amount=${amountValue}&addInfo=${addInfo}&accountName=${encodeURIComponent(accountName)}`;
+    }
+
+    // Lấy BIN code của ngân hàng (dùng cho VietQR)
+    getBankBin(bankCode: string): string {
+        const bankBins = {
+            'TPBANK': '970423',   // TPBank
+            'VCB': '970436',      // Vietcombank
+            'TCB': '970407',      // Techcombank
+            'MB': '970422',       // MB Bank
+            'ACB': '970416',      // ACB
+            'VPB': '970432',      // VPBank
+            'BIDV': '970418',     // BIDV
+            'VTB': '970415',      // Vietinbank
+            'AGR': '970405',      // Agribank
+            'SCB': '970429',      // SCB
+            'MSB': '970426',      // MSB
+            'SACOMBANK': '970403', // Sacombank
+        };
+        return bankBins[bankCode] || bankCode;
     }
 
     // Lấy tên ngân hàng
@@ -83,31 +110,66 @@ export class PaymentService {
     // Kiểm tra trạng thái giao dịch 
     async checkTransaction(orderNumber: string, userId: number) {
         try {
+            console.log(`Checking transaction for order: ${orderNumber}, userId: ${userId}`);
+            
             const order = await this.orderService.getOrderByNumber(orderNumber, userId);
       
             if (!order) {
                 throw new NotFoundException('Không tìm thấy đơn hàng');
             }
+
+            console.log(`Order found: ${order.id}, status: ${order.payment_status}`);
             
             // Gọi SePay API để kiểm tra trạng thái thanh toán
+            // Endpoint đúng theo docs: https://docs.sepay.vn
+            const apiEndpoint = `${this.apiUrl}/transactions/list/${this.accountNumber}`;
+            console.log(`Calling SePay API: ${apiEndpoint}`);
+            
             const response = await firstValueFrom(
-                this.httpService.get(`${this.apiUrl}/transactions`, {
+                this.httpService.get(apiEndpoint, {
                     headers: {
                         'Authorization': `Bearer ${this.apiKey}`,
                         'Content-Type': 'application/json',
                     },
                     params: {
-                        limit: 100,
+                        limit: 50,
                     }
                 })
             );
 
+            console.log(`SePay API response status: ${response.status}`);
+            console.log(`Transactions count: ${response.data.transactions?.length || 0}`);
+
             const transactions = response.data.transactions || [];
+            
+            // Log all transactions để debug
+            if (transactions.length > 0) {
+                console.log('=== ALL TRANSACTIONS ===');
+                transactions.forEach((tx: any, index: number) => {
+                    console.log(`Transaction ${index + 1}:`, {
+                        id: tx.id,
+                        amount_in: tx.amount_in,
+                        transaction_content: tx.transaction_content,
+                        transaction_date: tx.transaction_date,
+                    });
+                });
+                console.log('=========================');
+            }
+
             const transaction = transactions.find((tx: any) =>
                 tx.transaction_content?.toUpperCase().includes(orderNumber.toUpperCase())
             );
 
+            if (transaction) {
+                console.log(`✅ Transaction MATCHED for order: ${orderNumber}`, transaction);
+            } else {
+                console.log(`❌ No transaction match for order: ${orderNumber}`);
+                console.log(`Looking for: "${orderNumber}" in transaction_content`);
+            }
+
             if (transaction && parseFloat(transaction.amount_in) >= order.total_amount) {
+                console.log(`Payment confirmed for order ${orderNumber}`);
+                
                 // Cập nhật trạng thái thanh toán trong đơn hàng
                 await this.orderService.updatePaymentStatus(order.id, PaymentStatus.PAID);
 
@@ -127,9 +189,19 @@ export class PaymentService {
             };
         } catch (error) {
             console.error('Error checking transaction:', error);
+            
+            // Log chi tiết lỗi
+            if (error.response) {
+                console.error('API Response Error:', {
+                    status: error.response.status,
+                    data: error.response.data,
+                    headers: error.response.headers,
+                });
+            }
+            
             throw new HttpException(
-                'Lỗi khi kiểm tra trạng thái thanh toán', 
-                HttpStatus.INTERNAL_SERVER_ERROR
+                error.response?.data?.messages?.error || error.message || 'Lỗi khi kiểm tra trạng thái thanh toán', 
+                error.response?.status || error.status || HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -153,40 +225,126 @@ export class PaymentService {
     // Webhook xử lý cập nhật trạng thái thanh toán tự động từ SePay
     async handleWebhook(webhookData: any) {
         try {
-            const { content, amount_in, id } = webhookData;
+            console.log('=== SEPAY WEBHOOK RECEIVED ===');
+            console.log('Raw data:', JSON.stringify(webhookData, null, 2));
 
-            console.log('Webhook received:', webhookData);
+            // Theo docs SePay: https://docs.sepay.vn/tich-hop-webhooks.html
+            const {
+                gateway,
+                transactionDate,
+                accountNumber,
+                subAccount,
+                transferType,
+                transferAmount,
+                accumulated,
+                code,
+                content,
+                referenceCode,
+                description
+            } = webhookData;
 
+            // Validate required fields
+            if (!content || !transferAmount || transferType !== 'in') {
+                console.log('❌ Invalid webhook data or not incoming transfer');
+                return { 
+                    success: false, 
+                    message: 'Invalid webhook data or not incoming transfer' 
+                };
+            }
+
+            // Extract order number từ content
             const orderNumber = this.extractOrderNumber(content);
             
             if (!orderNumber) {
-                return { success: false, message: 'Không tìm thấy mã đơn hàng' };
+                console.log('❌ No order number found in content:', content);
+                return { 
+                    success: false, 
+                    message: 'Không tìm thấy mã đơn hàng trong nội dung chuyển khoản' 
+                };
             }
 
+            console.log(`✅ Order number found: ${orderNumber}`);
+
+            // Tìm order
             const order = await this.orderService.findByOrderNumber(orderNumber);
 
             if (!order) {
-                return { success: false, message: 'Không tìm thấy đơn hàng' };
+                console.log(`❌ Order not found: ${orderNumber}`);
+                return { 
+                    success: false, 
+                    message: `Không tìm thấy đơn hàng ${orderNumber}` 
+                };
             }
 
-            if (parseFloat(amount_in) >= order.total_amount && order.payment_status === PaymentStatus.PENDING) {
+            console.log(`✅ Order found: ID ${order.id}, Status: ${order.payment_status}, Amount: ${order.total_amount}`);
+
+            // Kiểm tra số tiền và trạng thái
+            const transferAmountNum = parseFloat(transferAmount);
+            const orderAmountNum = parseFloat(order.total_amount.toString());
+            
+            if (transferAmountNum >= orderAmountNum && 
+                order.payment_status === PaymentStatus.PENDING) {
+                
+                console.log(`✅ Payment confirmed! Amount: ${transferAmount} >= ${order.total_amount}`);
+
                 // Cập nhật trạng thái đơn hàng
                 await this.orderService.updatePaymentStatus(order.id, PaymentStatus.PAID);
 
-                // Lưu payment record
-                await this.createPaymentRecord(order.id, webhookData);
+                // Lưu payment record với format SePay
+                const transactionData = {
+                    id: code || referenceCode,
+                    gateway,
+                    transaction_date: transactionDate,
+                    account_number: accountNumber,
+                    sub_account: subAccount,
+                    amount_in: transferAmount,
+                    amount_out: 0,
+                    accumulated,
+                    code,
+                    transaction_content: content,
+                    reference_number: referenceCode,
+                    description,
+                };
+
+                await this.createPaymentRecord(order.id, transactionData);
+
+                console.log('✅ Payment record saved successfully');
 
                 return {
                     success: true,
-                    message: 'Đơn hàng đã thanh toán',
+                    message: `Đã xác nhận thanh toán cho đơn hàng ${orderNumber}`,
                     orderId: order.id,
                 };
             }
 
-            return { success: false, message: 'Số tiền không khớp hoặc đơn đã xử lý' };
+            // Log nếu không match điều kiện
+            if (order.payment_status !== PaymentStatus.PENDING) {
+                console.log(`⚠️ Order already processed. Current status: ${order.payment_status}`);
+                return { 
+                    success: false, 
+                    message: 'Đơn hàng đã được xử lý trước đó' 
+                };
+            }
+
+            if (transferAmountNum < orderAmountNum) {
+                console.log(`⚠️ Amount mismatch: ${transferAmount} < ${order.total_amount}`);
+                return { 
+                    success: false, 
+                    message: `Số tiền không khớp. Cần: ${order.total_amount}, Nhận: ${transferAmount}` 
+                };
+            }
+
+            return { 
+                success: false, 
+                message: 'Không thể xử lý thanh toán' 
+            };
+
         } catch (error) {
-            console.error('Webhook error:', error);
-            return { success: false, message: 'Lỗi xử lý webhook' };
+            console.error('❌ Webhook error:', error);
+            return { 
+                success: false, 
+                message: 'Lỗi xử lý webhook: ' + error.message 
+            };
         }
     }
 
@@ -194,5 +352,83 @@ export class PaymentService {
     private extractOrderNumber(content: string): string | null {
         const match = content.match(/FN\d+/i);
         return match ? match[0].toUpperCase() : null;
+    }
+
+    // Lấy danh sách transactions gần đây từ SePay (để test)
+    async getRecentTransactions() {
+        try {
+            const apiEndpoint = `${this.apiUrl}/transactions/list/${this.accountNumber}`;
+            
+            const response = await firstValueFrom(
+                this.httpService.get(apiEndpoint, {
+                    headers: {
+                        'Authorization': `Bearer ${this.apiKey}`,
+                        'Content-Type': 'application/json',
+                    },
+                    params: {
+                        limit: 20,
+                    }
+                })
+            );
+
+            return {
+                success: true,
+                count: response.data.transactions?.length || 0,
+                transactions: response.data.transactions || [],
+            };
+        } catch (error) {
+            console.error('Error fetching transactions:', error);
+            throw new HttpException(
+                'Lỗi khi lấy danh sách giao dịch', 
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    // Manual confirm payment (chỉ dùng testing - khi không thể test với transaction thật)
+    async manualConfirmPayment(orderNumber: string, transactionId: string, userId: number) {
+        try {
+            console.log(`Manual confirm payment for order: ${orderNumber}`);
+            
+            const order = await this.orderService.getOrderByNumber(orderNumber, userId);
+            
+            if (!order) {
+                throw new NotFoundException('Không tìm thấy đơn hàng');
+            }
+
+            if (order.payment_status === PaymentStatus.PAID) {
+                return {
+                    success: false,
+                    message: 'Đơn hàng đã được thanh toán trước đó',
+                    order,
+                };
+            }
+
+            // Tạo fake transaction data để lưu vào database
+            const fakeTransactionData = {
+                id: transactionId || `MANUAL_${Date.now()}`,
+                amount_in: order.total_amount.toString(),
+                transaction_content: `Manual confirmation for ${orderNumber}`,
+                transaction_date: new Date().toISOString(),
+            };
+
+            // Cập nhật trạng thái
+            await this.orderService.updatePaymentStatus(order.id, PaymentStatus.PAID);
+            
+            // Lưu payment record
+            await this.createPaymentRecord(order.id, fakeTransactionData);
+
+            return {
+                success: true,
+                message: '✅ Đã xác nhận thanh toán thủ công (TEST MODE)',
+                order: await this.orderService.getOrderById(order.id, userId),
+            };
+        } catch (error) {
+            console.error('Error manual confirm:', error);
+            throw new HttpException(
+                error.message || 'Lỗi khi xác nhận thanh toán thủ công',
+                error.status || HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 }
