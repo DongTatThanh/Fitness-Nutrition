@@ -10,6 +10,8 @@ import { PaymentStatus } from "./enum/payment-status.enum";
 import { CreateOrderDto } from "./DTO/order.dto";
 
 
+
+
 @Injectable()
 export class OrderService
  {
@@ -65,7 +67,10 @@ export class OrderService
         
         if (createOrderDto.discount_code) {
             try {
-                const validation = await this.discountCodeService.validateAndUseCode(createOrderDto.discount_code);
+                const validation = await this.discountCodeService.validateAndUseCode(createOrderDto.discount_code,
+                            
+                );
+
                 
                 if (validation.valid && validation.discountValue) {
                     // Tính discount amount dựa vào type
@@ -77,18 +82,23 @@ export class OrderService
                         discountAmount = validation.discountValue;
                     }
                     
-                    // Đảm bảo discount không vượt quá subtotal
                     discountAmount = Math.min(discountAmount, subtotal);
                     discountCode = createOrderDto.discount_code;
+
+               
                 }
             } catch (error) {
                 // Nếu mã giảm giá không hợp lệ, bỏ qua và tiếp tục tạo đơn hàng
                 discountAmount = 0;
                 discountCode = null;
+
             }
         }
+        //  tống sau khi trừ discount
         
         const totalAmount = this.calculateOrderTotal(cart.items, shippingFee, discountAmount);
+
+       
 
         // Tạo order mới 
         const order = this.orderRepository.create
