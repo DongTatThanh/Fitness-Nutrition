@@ -4,7 +4,7 @@ import { Order } from "./order.entity";
 import { Repository } from "typeorm";
 import { OrderItem } from "./orderItem.entity";
 import { CartService } from "../cart/cart.service";
-
+import { DiscountCodeService } from "../discount_code/discount_code.service";
 import { OrderStatus } from "./enum/order-status.enum";
 import { PaymentStatus } from "./enum/payment-status.enum";
 import { CreateOrderDto } from "./DTO/order.dto";
@@ -18,7 +18,8 @@ export class OrderService
         private orderRepository: Repository<Order>,
         @InjectRepository(OrderItem)
         private orderItemRepository: Repository<OrderItem>,
-        private cartService: CartService
+        private cartService: CartService,
+        private discountCodeService: DiscountCodeService
     ) {}
 
     // tạo mã đơn hàng
@@ -57,7 +58,36 @@ export class OrderService
         // Tính toán 
         const subtotal = cart.total;
         const shippingFee = createOrderDto.shipping_fee || 30000;
-        const discountAmount = 0; // nếu không có mã giảm giá thì bằng 0 
+        
+        // Xử lý mã giảm giá
+        let discountAmount = 0;
+        let discountCode: string | null = null;
+        
+        if (createOrderDto.discount_code) {
+            try {
+                const validation = await this.discountCodeService.validateAndUseCode(createOrderDto.discount_code);
+                
+                if (validation.valid && validation.discountValue) {
+                    // Tính discount amount dựa vào type
+                    if (validation.discountType === 'percentage') {
+                        // Giảm % trên subtotal
+                        discountAmount = (subtotal * validation.discountValue) / 100;
+                    } else if (validation.discountType === 'fixed') {
+                        // Giảm cố định
+                        discountAmount = validation.discountValue;
+                    }
+                    
+                    // Đảm bảo discount không vượt quá subtotal
+                    discountAmount = Math.min(discountAmount, subtotal);
+                    discountCode = createOrderDto.discount_code;
+                }
+            } catch (error) {
+                // Nếu mã giảm giá không hợp lệ, bỏ qua và tiếp tục tạo đơn hàng
+                discountAmount = 0;
+                discountCode = null;
+            }
+        }
+        
         const totalAmount = this.calculateOrderTotal(cart.items, shippingFee, discountAmount);
 
         // Tạo order mới 
@@ -81,7 +111,7 @@ export class OrderService
             status: OrderStatus.PENDING,
             payment_status: PaymentStatus.PENDING,
             notes: createOrderDto.notes,
-            discount_code: createOrderDto.discount_code,
+            discount_code: discountCode || undefined,
         });
 
         const savedOrder = await this.orderRepository.save(order);

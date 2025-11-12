@@ -29,8 +29,6 @@
         // Webhook nhận thông báo từ SePay
         @Post('webhook')
         async handleWebhook(@Body() data: any) {
-            // SePay sẽ gửi webhook khi có giao dịch thành công
-            console.log('Payment webhook ', data);
             return this.paymentService.handleWebhook(data);
         }
 
