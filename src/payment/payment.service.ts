@@ -58,17 +58,17 @@ export class PaymentService {
             content: order.order_number,
             qrCode: qrcode, 
             message: `Chuyển khoản ${order.total_amount.toLocaleString('vi-VN')}đ với nội dung: ${order.order_number}`,
-            expireAt: new Date(Date.now() + 15 * 60 * 1000), // hết hạn sau 15 phút
+            expireAt: new Date(Date.now() + 15 * 60 * 1000), // hạn 15 phút
         };
     }
 
     // Tạo QR code 
     generateQRCode(amount: number, content: string): string {
-        // VietQR API v2 - hỗ trợ tất cả ngân hàng Việt Nam
+   
         const bankBin = this.getBankBin(this.bankCode);
         const accountNo = this.accountNumber;
         const accountName = this.accountName;
-        const amountValue = Math.round(amount); // VietQR không chấp nhận số thập phân
+        const amountValue = Math.round(amount);
         const addInfo = encodeURIComponent(content);
         
         // Template: compact2 (nhỏ gọn), print (in ấn), qr_only (chỉ mã QR)
@@ -115,7 +115,7 @@ export class PaymentService {
             if (!order) {
                 throw new NotFoundException('Không tìm thấy đơn hàng');
             }
-            
+            //  gửi yêu cầu API lấy danh sách giao dịch gần đây
             const apiEndpoint = `${this.apiUrl}/transactions/list/${this.accountNumber}`;
             
             const response = await firstValueFrom(
@@ -195,7 +195,7 @@ export class PaymentService {
             if (!content || !transferAmount || transferType !== 'in') {
                 return { 
                     success: false, 
-                    message: 'Invalid webhook data or not incoming transfer' 
+                    message: 'lỗi dữ liệu webhook không hợp lệ' 
                 };
             }
 

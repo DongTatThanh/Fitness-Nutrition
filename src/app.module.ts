@@ -18,6 +18,7 @@ import { FlashSalesModule } from './flash_sales/flash-_ales.module';
 import { BannersModule } from './banners/banner.module';
 import { StoresModule } from './stores/stores.module';
 import { ProductViewModule } from './products/productView/productView.module';
+import { ProductViewModule as ProductViewHistoryModule } from './product-views/product-view.module';
 import { CartModule } from './cart/cart.module';
 import { MenuModule } from './menus/menu.module';
 import { OrderModule } from './orders/order.module';
@@ -56,12 +57,12 @@ import { PaymentModule } from './payment/payment.module';
     BannersModule,
     StoresModule,
     ProductViewModule,
+    ProductViewHistoryModule,
     UsersModule,
     CartModule,
     MenuModule,
     OrderModule,
     PaymentModule,
-    // PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

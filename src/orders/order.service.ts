@@ -27,7 +27,7 @@ export class OrderService
     // tạo mã đơn hàng
     private createOrderNumber(): string {    
         const timestamp = Date.now().toString();
-        const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');// nếu ngắn howej 3 kí tự thì thêm 0 vào đầu
         return 'FN' + timestamp + random;
     }
 
@@ -38,7 +38,7 @@ export class OrderService
             return total + (parseFloat(item.price) * item.quantity);
         }, 0);
 
-        const tax_amount = 0; // không có thuế sẽ hiển thị bằng 0 
+        const tax_amount = 0; // thuế để bằng không
         const total = subtotal + shippingFee + tax_amount - discountAmount;
     
         return Math.max(total, 0); // tiền không âm 
@@ -59,7 +59,7 @@ export class OrderService
 
         // Tính toán 
         const subtotal = cart.total;
-        const shippingFee = createOrderDto.shipping_fee || 30000;
+        const shippingFee = createOrderDto.shipping_fee ;
         
         // Xử lý mã giảm giá
         let discountAmount = 0;

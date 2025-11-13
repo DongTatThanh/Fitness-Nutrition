@@ -1,13 +1,16 @@
-import { Controller, Get, Query, Param, ParseIntPipe } from '@nestjs/common';    
+import { Controller, Get, Query, Param, ParseIntPipe, Request } from '@nestjs/common';    
 import { ProductsService } from './products.service';
+import { ProductViewService } from '../product-views/product-view.service';
 import { get } from 'http';
 
 
 
 @Controller('products')
 export class ProductsController {
-    constructor(private readonly productsService: ProductsService) 
-    {}
+    constructor(
+        private readonly productsService: ProductsService,
+        private readonly productViewService: ProductViewService
+    ) {}
 
     // lấy tất cả các sản phẩm 
     @Get() 
@@ -31,11 +34,25 @@ export class ProductsController {
     }
 
   
-    // Lấy chi tiết sản phẩm theo ID
+    // Lấy chi tiết sản phẩm theo ID và tự động lưu vào lịch sử xem
     @Get(':id')
-    async findProductsId(@Param('id', ParseIntPipe) id: number) 
-    {
-        return this.productsService.findProductsId(id);
+    async findProductsId(
+        @Param('id', ParseIntPipe) id: number,
+        @Request() req
+    ) {
+        // Lấy thông tin sản phẩm
+        const product = await this.productsService.findProductsId(id);
+        
+        // Tự động lưu vào lịch sử xem (không chờ, chạy async)
+        const userId = req.user?.id || 1;
+        const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress;
+        const userAgent = req.headers['user-agent'];
+        
+        // Chạy bất đồng bộ, không block response
+        this.productViewService.addView(userId, id, ipAddress, userAgent)
+            .catch(err => console.error('Error saving product view:', err));
+        
+        return product;
     }
 
         

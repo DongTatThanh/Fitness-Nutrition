@@ -58,7 +58,7 @@ export class CartService {
                 throw new NotFoundException(`Sản phẩm với ID ${AddToCartDto.product_id} không đủ số lượng trong kho.`);
             }
 
-            // tìm nếu không có thì tại mới giỏ hàng cho user
+            // tìm nếu không có thì tạo mới giỏ hàng cho user
             
             let cart = await this.cartRepository.findOne({  // const không cho gán lại biến 
                 where: { user_id: user_id },
@@ -103,7 +103,7 @@ export class CartService {
 
             return  this.getcart(user_id);
         }
-
+                 // tìm giỏ hàng theo user id
         async getcart(user_id: number) {
             const cart = await this.cartRepository.findOne({
                 where: { user_id: user_id },
@@ -116,8 +116,8 @@ export class CartService {
                return { items: [], total: 0 };
 
             }
-        // tính tổng tiền cho giỏ hàng 
-        const total = cart.items.reduce
+        // tính tổng tiền cho giỏ hàng  
+        const total = cart.items.reduce      // reduce cộng dồn
         ((sum, item) => sum + item.price * item.quantity, 0);
           
         return {
@@ -147,7 +147,8 @@ export class CartService {
 
             // xóa cart item
             await this.cartItemRepository.remove(cartItem);
-            return this.getcart(user_id);
+            return this.getcart(user_id); // trả về giỏ hàng mới nhất
+            
     }
 
     // cập nhật lại số lượng sản phẩm trong giỏ hàng

@@ -38,7 +38,7 @@
             return this.paymentService.getRecentTransactions();
         }
 
-        // API test - manually mark order as paid (chỉ dùng testing)
+       
         @Post('manual-confirm')
         async manualConfirm(
             @Body('orderNumber') orderNumber: string,
