@@ -22,7 +22,11 @@ async function bootstrap() {
     origin: [
       'http://localhost:8081',
       'http://localhost:3000',
+      'http://localhost:5173', // Admin frontend
+      'http://localhost:5174', // Admin frontend (Vite auto port)
       'http://127.0.0.1:8081',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:5174',
       /^http:\/\/192\.168\.\d+\.\d+:8081$/, // LAN access
       /^http:\/\/10\.\d+\.\d+\.\d+:8081$/, // Private network
       process.env.FRONTEND_URL

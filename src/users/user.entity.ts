@@ -8,6 +8,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
 
 import { ProductView} from '../products/productView/productView.entity';
 @Entity('users')
@@ -18,7 +19,9 @@ export class User {
   @Column({ length: 50 })
   username: string;
 
+
   @Column({ length: 255 })
+   @Exclude()
   password: string;
 
   @Column({ length: 100 })

@@ -48,5 +48,25 @@ export class UsersService {
             select: [ 'email', 'full_name', 'phone', 'created_at']
          });
       }
-  
+
+  // Admin: Lấy chi tiết user đầy đủ
+  async findByIdForAdmin(id: number): Promise<User | null> {
+    return this.usersRepo.findOne({ where: { user_id: id } });
+  }
+
+  // Admin: Cập nhật thông tin user
+  async updateUser(userId: number, updateData: Partial<User>): Promise<User> {
+    await this.usersRepo.update({ user_id: userId }, updateData);
+    const user = await this.findById(userId);
+    if (!user) throw new Error('User not found after update');
+    return user;
+  }
+
+  // Admin: Xóa user
+  async deleteUser(userId: number): Promise<void> {
+    const result = await this.usersRepo.delete({ user_id: userId });
+    if (result.affected === 0) {
+      throw new Error('User not found');
+    }
+  }
 }

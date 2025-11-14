@@ -23,6 +23,7 @@ import { CartModule } from './cart/cart.module';
 import { MenuModule } from './menus/menu.module';
 import { OrderModule } from './orders/order.module';
 import { PaymentModule } from './payment/payment.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 // import { PaymentModule } from './payment/payment.module';
 
@@ -63,6 +64,7 @@ import { PaymentModule } from './payment/payment.module';
     MenuModule,
     OrderModule,
     PaymentModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

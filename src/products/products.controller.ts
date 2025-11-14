@@ -61,31 +61,61 @@ export class ProductsController {
     // lấy sản phẩm trong khoảng giá cho category
     
   @Get(':categoryId/products')
-async getProductsByCategory(
-  @Param('categoryId') categoryId: string,
-  @Query('isFlashSale') isFlashSale?: boolean,
-  
-  @Query('minPrice') minPrice?: string,
-  @Query('maxPrice') maxPrice?: string,
-  @Query('brandId') brandId?: string,
-  @Query('sort') sort?: string, 
-  @Query('page') page: string = '1',
-  @Query('limit') limit: string = '12',
-) {
-  return this.productsService.getProductsByCategory({
-    categoryId: Number(categoryId),
-    isFlashSale: isFlashSale,
-    priceMin: minPrice ? Number(minPrice) : undefined,
-    priceMax: maxPrice ? Number(maxPrice) : undefined,
-    brandId: brandId ? Number(brandId) : undefined,
-    sort,
-    page: Number(page),
-    limit: Number(limit),
+  async getProductsByCategory(
+    @Param('categoryId') categoryId: string,
+    @Query('isFlashSale') isFlashSale?: boolean,
+    
+    @Query('minPrice') minPrice?: string,
+    @Query('maxPrice') maxPrice?: string,
+    @Query('brandId') brandId?: string,
+    @Query('sort') sort?: string, 
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '12',
+  ) {
+    return this.productsService.getProductsByCategory({
+      categoryId: Number(categoryId),
+      isFlashSale: isFlashSale,
+      priceMin: minPrice ? Number(minPrice) : undefined,
+      priceMax: maxPrice ? Number(maxPrice) : undefined,
+      brandId: brandId ? Number(brandId) : undefined,
+      sort,
+      page: Number(page),
+      limit: Number(limit),
+    });
+  }
 
-  });
+  // API Admin: Lấy danh sách sản phẩm phân trang
+  @Get('admin/list')
+  async getAdminProducts(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+    @Query('search') search?: string,
+    @Query('status') status?: string
+  ) {
+    const skip = (Number(page) - 1) * Number(limit);
+    let query = this.productsService['productsRepository']
+      .createQueryBuilder('product')
+      .skip(skip)
+      .take(Number(limit));
 
-  
+    if (search) {
+      query = query.where('product.name LIKE :search OR product.description LIKE :search', {
+        search: `%${search}%`
+      });
+    }
 
+    if (status) {
+      query = query.andWhere('product.status = :status', { status });
+    }
 
-}
+    const [products, total] = await query.getManyAndCount();
+
+    return {
+      data: products,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      pages: Math.ceil(total / Number(limit))
+    };
+  }
 }

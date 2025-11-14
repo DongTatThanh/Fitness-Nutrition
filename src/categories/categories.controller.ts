@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseIntPipe } from "@nestjs/common";
+import { Controller, Get, Param, ParseIntPipe, Query } from "@nestjs/common";
 import { CategoriesService } from "./categories.service";
 
 @Controller('categories')
@@ -17,6 +17,38 @@ export class CategoriesController {
     @Get('all/with-products')
     async findAllCategoriesWithProducts() {
         return this.categoriesService.findAllCategoriesWithProducts();
+    }
+
+    // API Admin: Lấy danh sách danh mục phân trang
+    @Get('admin/list/all')
+    async getAdminCategories(
+        @Query('page') page: string = '1',
+        @Query('limit') limit: string = '10',
+        @Query('search') search?: string
+    ) {
+        const skip = (Number(page) - 1) * Number(limit);
+        let query = this.categoriesService['categoriesRepository']
+            .createQueryBuilder('category')
+            .skip(skip)
+            .take(Number(limit));
+
+        if (search) {
+            query = query.where('category.name LIKE :search', {
+                search: `%${search}%`
+            });
+        }
+
+        query = query.orderBy('category.id', 'ASC');
+
+        const [categories, total] = await query.getManyAndCount();
+
+        return {
+            data: categories,
+            total,
+            page: Number(page),
+            limit: Number(limit),
+            pages: Math.ceil(total / Number(limit))
+        };
     }
 
     // Lấy category theo id

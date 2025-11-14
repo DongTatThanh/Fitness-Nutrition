@@ -1,4 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { Exclude } from 'class-transformer';
 
 @Entity({ name: 'users' })
 export class User {
@@ -17,6 +18,7 @@ export class User {
   
     // DB column is `password` — map to TS property `password_hash` so code doesn't need changes
     @Column({ name: 'password', length: 255 })
+    @Exclude()
     password_hash: string;
   
     @Column({ length: 100, nullable: true })
