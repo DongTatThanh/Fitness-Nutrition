@@ -1,5 +1,8 @@
-import { Controller, Get, Param, Query, Put, Delete, Body, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Param, Query, Put, Delete, Body, NotFoundException, BadRequestException, Post } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import * as bcrypt from 'bcryptjs';
 
 
 @Controller('users')
@@ -87,7 +90,7 @@ export class UsersController {
   @Put('admin/:id')
   async updateUser(
     @Param('id') id: string,
-    @Body() updateData: Partial<{ username: string; email: string; phone: string; full_name: string; address: string; role_id: number }>
+    @Body() updateData: UpdateUserDto
   ) {
     try {
       await this.usersService.updateUser(Number(id), updateData);
@@ -116,6 +119,47 @@ export class UsersController {
       };
     } catch (error) {
       throw new BadRequestException(error.message || 'Không thể cập nhật người dùng');
+    }
+  }
+
+  // API Admin: Thêm user mới
+  @Post('admin/createUser')
+  async createUser(
+    @Body() userData: CreateUserDto
+  ) {
+    try {
+      // Hash password trước khi lưu
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      
+      const newUser = await this.usersService.addUser({
+        ...userData,
+        password_hash: hashedPassword
+      });
+      
+      // Trả về user không có password
+      const user = await this.usersService['usersRepo']
+        .createQueryBuilder('user')
+        .select([
+          'user.user_id',
+          'user.username',
+          'user.email',
+          'user.phone',
+          'user.full_name',
+          'user.address',
+          'user.role_id',
+          'user.customer_tier_id',
+          'user.created_at'
+        ])
+        .where('user.user_id = :id', { id: newUser.user_id })
+        .getOne();
+
+      return {
+        success: true,
+        message: 'Tạo người dùng thành công',
+        data: user
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message || 'Không thể tạo người dùng');
     }
   }
 

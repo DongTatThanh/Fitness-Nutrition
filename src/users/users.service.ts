@@ -69,4 +69,12 @@ export class UsersService {
       throw new Error('User not found');
     }
   }
+
+  // Thêm user mới 
+
+
+  async addUser(userData: Partial<User>): Promise<User> {
+    const newUser = this.usersRepo.create(userData);
+    return this.usersRepo.save(newUser);
+  }
 }
