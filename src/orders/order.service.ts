@@ -47,7 +47,8 @@ export class OrderService
     // Tạo đơn hàng mới từ giỏ hàng
     async createOrder(userId: number, createOrderDto: CreateOrderDto) 
     {
-        const cart = await this.cartService.getcart(userId);
+        const cartResponse = await this.cartService.getcart(userId);
+        const cart = cartResponse.data || cartResponse;
          
         if (!cart || !cart.items || cart.items.length === 0) 
             {
@@ -128,22 +129,23 @@ export class OrderService
 
         // tạo order items từ cart items
         const orderItems = cart.items.map(item => {
-            const unitPrice = parseFloat(item.price);
+            const unitPrice = typeof item.price === 'string' ? parseFloat(item.price) : item.price;
             const quantity = item.quantity;
             const totalPrice = unitPrice * quantity;
 
-            return this.orderItemRepository.create({
-                order_id: savedOrder.id,
-                product_id: item.product.id,
-                variant_id: item.variant?.id || null,
-                product_name: item.product.name,
-                variant_name: item.variant?.name || null,
-                sku: item.product.sku,
-                quantity: quantity,
-                unit_price: unitPrice,
-                total_price: totalPrice,
-                product_image: item.product.featured_image,
-            });
+            const orderItem = new OrderItem();
+            orderItem.order_id = savedOrder.id;
+            orderItem.product_id = item.product.id;
+            orderItem.variant_id = item.variant?.id;
+            orderItem.product_name = item.product.name;
+            orderItem.variant_name = item.variant?.name;
+            orderItem.sku = item.product.sku;
+            orderItem.quantity = quantity;
+            orderItem.unit_price = unitPrice;
+            orderItem.total_price = totalPrice;
+            orderItem.product_image = item.product.featured_image;
+
+            return orderItem;
         });
 
         await this.orderItemRepository.save(orderItems);

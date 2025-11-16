@@ -1,14 +1,16 @@
-import { Controller, Param, ParseIntPipe, Post, Patch, BadRequestException } from "@nestjs/common";
+import { Controller, Param, ParseIntPipe, Post, Patch, BadRequestException, UseGuards } from "@nestjs/common";
 import { OrderService } from "./order.service";
 import { Request, Body } from "@nestjs/common";
 import { CreateOrderDto } from "./DTO/order.dto";
 import { OrderStatus } from "./enum/order-status.enum";
 import { Get, Query } from "@nestjs/common";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 
 
 
 
-@Controller('api/orders')
+@Controller('/api/orders')
+@UseGuards(JwtAuthGuard)
 export class OrderController {
     constructor(private readonly orderService: OrderService) {}
 
@@ -19,18 +21,30 @@ export class OrderController {
     (@Request() req,
      @Body() createOrderDto: CreateOrderDto)
       {
-        const userId = req.user?.id || 1;
-        return this.orderService.createOrder(userId, createOrderDto);
+        if (!req.user?.id) {
+            return {
+                success: false,
+                message: 'Vui lòng đăng nhập để tạo đơn hàng',
+                data: null
+            };
+        }
+        return this.orderService.createOrder(req.user.id, createOrderDto);
     }
 
-    // lấy danh sách đơn hàng của user 
+    // lấy danh sách đơn hàng của user      
     @Get()
     async getUserOrders(
         @Request() req,
         @Query('status') status?: OrderStatus
     ) {
-        const userId = req.user?.id ;
-        return this.orderService.getOrdersByUser(userId, status);
+        if (!req.user?.id) {
+            return {
+                success: false,
+                message: 'Vui lòng đăng nhập để xem đơn hàng',
+                data: null
+            };
+        }
+        return this.orderService.getOrdersByUser(req.user.id, status);
     }
 
     // API: Lấy đơn hàng gần đây
@@ -47,6 +61,22 @@ export class OrderController {
             id: order.order_number || order.id.toString()
         }));
     }
+    
+   // lấy đơn hàng theo order_number
+   @Get('number/:order_number')
+    async getOrderByNumber(
+        @Request() req,
+        @Param('order_number') orderNumber: string
+    ) {
+        if (!req.user?.id) {
+            return {
+                success: false,
+                message: 'Vui lòng đăng nhập để xem đơn hàng',
+                data: null
+            };
+        }
+        return this.orderService.getOrderByNumber(orderNumber, req.user.id);
+    }
 
     // lấy chi tiết đơn hàng theo ID 
 
@@ -56,32 +86,36 @@ export class OrderController {
         @Request() req,
         @Param('id', ParseIntPipe)orderId: number
     ) {
-        const userId = req.user?.id ;
-        return this.orderService.getOrderById(orderId, userId);
+        if (!req.user?.id) {
+            return {
+                success: false,
+                message: 'Vui lòng đăng nhập để xem chi tiết đơn hàng',
+                data: null
+            };
+        }
+        return this.orderService.getOrderById(orderId, req.user.id);
     }
 
-   // lấy đơn hàng theo order_number
-   @Get('number/:order_number')
-    async getOrderByNumber(
-        @Request() req,
-        @Param('order_number') orderNumber: string
-    ) {
-        const userId = req.user?.id ;
-        return this.orderService.getOrderByNumber(orderNumber, userId);
-    }
 
     // Hủy đơn hàng
-    @Patch(':id/cancel')
+    @Post(':id/cancel')
     async cancelOrder(
         @Request() req,
         @Param('id', ParseIntPipe) orderId: number,
         @Body() body?: { reason?: string }
     ) {
         try {
-            const userId = req.user?.id || 1;
+            if (!req.user?.id) {
+                return {
+                    success: false,
+                    message: 'Vui lòng đăng nhập để hủy đơn hàng',
+                    data: null
+                };
+            }
+            
             const reason = body?.reason;
             
-            const cancelledOrder = await this.orderService.cancelOrder(orderId, userId, reason);
+            const cancelledOrder = await this.orderService.cancelOrder(orderId, req.user.id, reason);
             
             return {
                 success: true,

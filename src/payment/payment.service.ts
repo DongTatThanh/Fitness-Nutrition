@@ -30,12 +30,44 @@ export class PaymentService {
         this.apiUrl = this.configService.get<string>('SEPAY_API_URL') || '';
     }
       
-    // Tạo thông tin thanh toán 
+    // Tạo thông tin thanh toán theo orderId
     async createPaymentInfo(orderId: number, userId: number) {
         const order = await this.orderService.getOrderById(orderId, userId);
 
         if (!order) {
             throw new NotFoundException(`Đơn hàng với ID ${orderId} không tồn tại.`);
+        }
+
+        // Kiểm tra đã thanh toán chưa
+        if (order.payment_status === PaymentStatus.PAID) {
+            throw new HttpException('Đơn hàng đã được thanh toán.', HttpStatus.BAD_REQUEST);
+        }
+
+        const qrcode = this.generateQRCode(order.total_amount, order.order_number);
+
+        return {
+            orderId: order.id,
+            orderNumber: order.order_number,
+            bankInfo: {
+                accountNumber: this.accountNumber,
+                accountName: this.accountName,
+                bankCode: this.bankCode,
+                bankName: this.getBankName(this.bankCode),
+            },
+            amount: order.total_amount,
+            content: order.order_number,
+            qrCode: qrcode, 
+            message: `Chuyển khoản ${order.total_amount.toLocaleString('vi-VN')}đ với nội dung: ${order.order_number}`,
+            expireAt: new Date(Date.now() + 15 * 60 * 1000), // hạn 15 phút
+        };
+    }
+
+    // Tạo thông tin thanh toán theo orderNumber
+    async createPaymentInfoByNumber(orderNumber: string, userId: number) {
+        const order = await this.orderService.getOrderByNumber(orderNumber, userId);
+
+        if (!order) {
+            throw new NotFoundException(`Đơn hàng với số ${orderNumber} không tồn tại.`);
         }
 
         // Kiểm tra đã thanh toán chưa

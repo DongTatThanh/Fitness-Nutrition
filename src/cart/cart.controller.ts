@@ -1,14 +1,16 @@
 import { Cart } from './cart.entity';
-import { Controller, Delete } from "@nestjs/common";
+import { Controller, Delete, UseGuards } from "@nestjs/common";
 import { CartService } from "./cart.service";
 import { Get, Param, ParseIntPipe } from "@nestjs/common";
 import { AddToCartDto } from './DTO/cart.dto.entity';
 import { Post, Body, Request } from "@nestjs/common";  
 import { CartItem } from './cart_Item.entity';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 
 
 @Controller('cart')
+@UseGuards(JwtAuthGuard)
 export class CartController {
     constructor(private cartService: CartService) 
     {}  
@@ -18,15 +20,27 @@ export class CartController {
 
     @Post('items')
     async addToCart(@Request() req, @Body() addToCartDto: AddToCartDto) {
-        const userId = req.user?.id || 1; 
-        return this.cartService.checkProductExists(userId, addToCartDto);
+        if (!req.user?.id) {
+            return {
+                success: false,
+                message: 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng',
+                data: null
+            };
+        }
+        return this.cartService.checkProductExists(req.user.id, addToCartDto);
     }
 
     
     @Get()
     async getCartItems(@Request() req) {
-        const userId = req.user?.id || 1; 
-        return this.cartService.getCartItemsByUserId(userId);
+        if (!req.user?.id) {
+            return {
+                success: true,
+                message: 'Giỏ hàng trống',
+                data: { items: [], total: 0, itemCount: 0 }
+            };
+        }
+        return this.cartService.getCartItemsByUserId(req.user.id);
     }
 
     // xóa item sản phẩm 
@@ -38,8 +52,14 @@ export class CartController {
         @Param('id', ParseIntPipe) cartItemId: number
     )
     {
-        const userId = req.user?.id || 1;
-        return this.cartService.removeItemFromCart(userId, cartItemId);
+        if (!req.user?.id) {
+            return {
+                success: false,
+                message: 'Vui lòng đăng nhập để xóa sản phẩm khỏi giỏ hàng',
+                data: null
+            };
+        }
+        return this.cartService.removeItemFromCart(req.user.id, cartItemId);
 
     }
     // cập nhật số lượng sản phẩm 
@@ -50,8 +70,14 @@ export class CartController {
         @Param('id', ParseIntPipe) cartItemId: number,
         @Body('quantity') quantity: number
     ) {
-        const userId = req.user?.id || 1;
-        return this.cartService.updateCartItemQuantity(userId, cartItemId, quantity);
+        if (!req.user?.id) {
+            return {
+                success: false,
+                message: 'Vui lòng đăng nhập để cập nhật giỏ hàng',
+                data: null
+            };
+        }
+        return this.cartService.updateCartItemQuantity(req.user.id, cartItemId, quantity);
 
 }
 }

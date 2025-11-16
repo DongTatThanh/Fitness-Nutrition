@@ -43,14 +43,15 @@ export class ProductsController {
         // Lấy thông tin sản phẩm
         const product = await this.productsService.findProductsId(id);
         
-        // Tự động lưu vào lịch sử xem (không chờ, chạy async)
-        const userId = req.user?.id || 1;
-        const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress;
-        const userAgent = req.headers['user-agent'];
-        
-        // Chạy bất đồng bộ, không block response
-        this.productViewService.addView(userId, id, ipAddress, userAgent)
-            .catch(err => console.error('Error saving product view:', err));
+        // Tự động lưu vào lịch sử xem (chỉ nếu user đã đăng nhập)
+        if (req.user?.id) {
+            const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress;
+            const userAgent = req.headers['user-agent'];
+            
+            // Chạy bất đồng bộ, không block response
+            this.productViewService.addView(req.user.id, id, ipAddress, userAgent)
+                .catch(err => console.error('Error saving product view:', err));
+        }
         
         return product;
     }
