@@ -22,32 +22,13 @@ export class AuthController {
   }
 
   @Post('register')
-  async register(@Body() dto: any) 
-
-  {
-    console.log(' RAW Register request body:', dto);
-    console.log(' RAW Data types:', {
-      email: typeof dto.email,
-      password: typeof dto.password,
-      full_name: typeof dto.full_name
-    });
-    console.log(' RAW Data values:', 
-      
-      {
-      email: dto.email,
-      password: dto.password?.length ? `[${dto.password.length} chars]` : 'empty/undefined',
-      full_name: dto.full_name
-    });
-    console.log(' Full request object keys:', Object.keys(dto));
-
-    // Convert to proper DTO for service
+  async register(@Body() dto: any) {
     const registerDto = new RegisterDto();
     registerDto.email = dto.email;
     registerDto.password = dto.password;
     registerDto.full_name = dto.full_name;
     
     return this.authService.register(registerDto);
-
   }
 
   @Post('forgot-password')
@@ -57,11 +38,7 @@ export class AuthController {
   }
 
   @Post('reset-password')
-
-  async resetPassword(@Body() dto: ResetPasswordDto)
-   {
-    console.log(' Reset password request:', { otp: dto.otp, passwordLength: dto.newPassword?.length });
-    
+  async resetPassword(@Body() dto: ResetPasswordDto) {
     if (!dto.otp || !dto.newPassword) {
       throw new BadRequestException('Mã OTP và mật khẩu mới là bắt buộc');
     }
@@ -69,16 +46,11 @@ export class AuthController {
   }
 
   @Post('verify-otp')
-  async verifyOtp(@Body() dto: any) 
-  
-  {
-    console.log(' Verify OTP only request:', { otp: dto.otp, email: dto.email });
-    
+  async verifyOtp(@Body() dto: any) {
     if (!dto.otp) {
       throw new BadRequestException('Mã OTP là bắt buộc');
     }
     
-    // Chỉ kiểm tra OTP, không reset password
     return this.authService.verifyOtpOnly(dto.otp);
   }
 

@@ -5,30 +5,7 @@ import { SearchService } from './search.service';
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
-  /**
-   * API tìm kiếm tổng hợp
-   * GET /api/search?q=keyword&limit=10&types=products,categories,brands,stores
-   *
-   * Query Parameters:
-   * - q (required): Từ khóa tìm kiếm
-   * - limit (optional): Số lượng kết quả tối đa cho mỗi loại (mặc định: 10)
-   * - types (optional): Các loại cần tìm kiếm, phân cách bằng dấu phẩy
-   *   Ví dụ: products,categories hoặc products,brands,stores
-   *   Mặc định: tìm kiếm tất cả (products, categories, brands, stores)
-   *
-   * Response:
-   * {
-   *   success: true,
-   *   query: "từ khóa tìm kiếm",
-   *   results: {
-   *     products: { data: [...], total: số },
-   *     categories: { data: [...], total: số },
-   *     brands: { data: [...], total: số },
-   *     stores: { data: [...], total: số },
-   *     total: tổng số kết quả
-   *   }
-   * }
-   */
+  
   @Get()
   async search(
     @Query('q') query: string,

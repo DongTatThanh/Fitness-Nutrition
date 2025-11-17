@@ -11,9 +11,9 @@
         // Tạo thông tin thanh toán (QR code) - nhận orderId hoặc orderNumber
         @Post('info')
         async createPaymentInfo(
+            @Req() req: Request,
             @Body('orderId') orderId?: number,
             @Body('orderNumber') orderNumber?: string,
-            @Req() req: Request,
         ) { 
             if (!req['user']?.id) {
                 return {

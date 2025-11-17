@@ -9,9 +9,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Product } from 'src/products/product.entity';
 import { Order } from 'src/orders/order.entity';
 import { AuthModule } from '../auth/auth.module';
+import { FlashSalesModule } from '../flash_sales/flash-_ales.module';
 
 @Module({
-      imports: [TypeOrmModule.forFeature([Cart, CartItem ,Product ]), AuthModule],
+      imports: [
+        TypeOrmModule.forFeature([Cart, CartItem ,Product ]), 
+        AuthModule,
+        FlashSalesModule,
+      ],
     controllers: [CartController],
     providers: [CartService, ],
     exports: [CartService ],

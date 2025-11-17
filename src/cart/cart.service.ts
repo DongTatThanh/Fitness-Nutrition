@@ -9,6 +9,7 @@ import { CartItem } from './cart_Item.entity';
 import { Product } from '../products/product.entity';
 import { AddToCartDto } from './DTO/cart.dto.entity';
 import { ProductVariant } from 'src/products/product-variant.entity';
+import { FlashSalesService } from '../flash_sales/flash_sales.service';
 
 
 
@@ -17,12 +18,14 @@ import { ProductVariant } from 'src/products/product-variant.entity';
 
 @Injectable()
 export class CartService {
-    constructor(  @InjectRepository(Cart)
+    constructor(  
+        @InjectRepository(Cart)
         private cartRepository: Repository<Cart>,
         @InjectRepository(CartItem)
         private cartItemRepository: Repository<CartItem>,
         @InjectRepository(Product)
         private productRepository: Repository<Product>,
+        private flashSalesService: FlashSalesService,
     ) {}
 
     // lấy giỏ hàng theo ID người dùng
@@ -89,18 +92,43 @@ export class CartService {
                 },
             });
 
+            // Kiểm tra xem sản phẩm có trong flash sale không
+            let finalPrice = Number(product.price);
+            const flashSalePrice = await this.flashSalesService.getFlashSalePrice(
+                AddToCartDto.product_id,
+                AddToCartDto.variant
+            );
+
+            if (flashSalePrice) {
+                // Nếu có flash sale, dùng giá flash sale
+                finalPrice = flashSalePrice.sale_price;
+            } else {
+                // Nếu không có flash sale, kiểm tra variant price
+                if (AddToCartDto.variant) {
+                    const variantRepository = this.productRepository.manager.getRepository(ProductVariant);
+                    const variant = await variantRepository.findOne({
+                        where: { id: AddToCartDto.variant },
+                    });
+                    if (variant && variant.price) {
+                        finalPrice = Number(variant.price);
+                    }
+                }
+            }
+
             if (existingItem) {
-                // cập nhật số lượng nếu sản phẩm đã tồn tại trong giỏ hàng 
+                // cập nhật số lượng nếu sản phẩm đã tồn tại trong giỏ hàng
+                // Giữ nguyên giá cũ nếu đã có (để tránh thay đổi giá khi flash sale kết thúc)
                 existingItem.quantity += AddToCartDto.quantity;
                 await this.cartItemRepository.save(existingItem);
             } else {
-                // tạo mới nếu sản phẩm chưa có trong giỏ hàng 
+                // tạo mới nếu sản phẩm chưa có trong giỏ hàng
+                // Lưu giá flash sale nếu có
                 const cartItem = this.cartItemRepository.create({
                     cart_id: cart.id, 
                     product: product,
                     variant: AddToCartDto.variant ? { id: AddToCartDto.variant } as any : undefined,
                     quantity: AddToCartDto.quantity,
-                    price: product.price,
+                    price: finalPrice, // Lưu giá từ flash sale hoặc product/variant
                 });
                 await this.cartItemRepository.save(cartItem);
             }

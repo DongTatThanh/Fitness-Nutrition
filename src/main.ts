@@ -6,15 +6,6 @@ import { AppModule } from './app.module';
 import { ValidationPipe, BadRequestException } from '@nestjs/common';
 
 async function bootstrap() {
-  // Debug environment variables
-  console.log('🔧 Environment Variables Check:');
-  console.log('PORT:', process.env.PORT);
-  console.log('HOST:', process.env.HOST);
-  console.log('SMTP_HOST:', process.env.SMTP_HOST ? ' Set' : ' Missing');
-  console.log('SMTP_USER:', process.env.SMTP_USER ? ' Set' : ' Missing');
-  console.log('SMTP_PASS:', process.env.SMTP_PASS ? ' Set' : ' Missing');
-  console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
-  
   const app = await NestFactory.create(AppModule);
   
   // Enable CORS for cross-origin requests
@@ -48,7 +39,6 @@ async function bootstrap() {
         const constraints = error.constraints;
         return Object.values(constraints || {}).join(', ');
       });
-      console.log(' Validation errors:', messages);
       return new BadRequestException(messages.join(', '));
     }
   }));

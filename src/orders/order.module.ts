@@ -7,13 +7,15 @@ import { OrderService } from './order.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Order } from './order.entity';
 import { OrderItem } from './orderItem.entity';
+import { WebSocketModule } from '../WebSocket/websocket.module';
 
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Order, OrderItem]),
     CartModule,
-    DiscountCodeModule
+    DiscountCodeModule,
+    WebSocketModule,
   ],
   controllers: [OrderController],
   providers: [OrderService],

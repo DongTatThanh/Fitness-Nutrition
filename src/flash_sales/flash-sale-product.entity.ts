@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { FlashSale } from './flash-sale.entity';
 import { Product } from '../products/product.entity';
+import { ProductVariant } from '../products/product-variant.entity';
 
 @Entity('flash_sale_items')
 export class FlashSaleProduct {
@@ -35,4 +36,8 @@ export class FlashSaleProduct {
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id' })
   product: Product;
+
+  @ManyToOne(() => ProductVariant, { nullable: true })
+  @JoinColumn({ name: 'variant_id' })
+  variant: ProductVariant;
 }

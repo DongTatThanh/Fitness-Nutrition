@@ -34,21 +34,48 @@ export class FlashSalesController {
     const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
 
     // Map products với thông tin flash sale
-    const products = flashSale.items.map((item) => ({
-      ...item.product,
-      flash_sale: {
-        item_id: item.id,
-        original_price: item.original_price,
-        sale_price: item.sale_price,
-        discount_percent: this.flashSalesService.calculateDiscountPercent(
-          Number(item.original_price),
-          Number(item.sale_price),
-        ),
-        max_quantity: item.max_quantity,
-        sold_quantity: item.sold_quantity,
-        remaining: item.max_quantity ? item.max_quantity - item.sold_quantity : null,
-      },
-    }));
+    // Nếu có variant, lấy giá từ variant; nếu không, lấy từ product
+    const products = flashSale.items.map((item) => {
+      // Xác định original_price: ưu tiên variant, sau đó product, cuối cùng là item.original_price
+      let originalPrice: number;
+      if (item.variant_id && item.variant) {
+        // Có variant: lấy giá từ variant (compare_price nếu có, không thì price)
+        originalPrice = Number(item.variant.compare_price || item.variant.price || item.original_price);
+      } else {
+        // Không có variant: lấy từ product hoặc item.original_price
+        originalPrice = Number(item.product.compare_price || item.product.price || item.original_price);
+      }
+
+      // Sale price luôn lấy từ flash_sale_items
+      const salePrice = Number(item.sale_price);
+
+      return {
+        ...item.product,
+        variant: item.variant ? {
+          id: item.variant.id,
+          variant_name: item.variant.variant_name,
+          size: item.variant.size,
+          flavor: item.variant.flavor,
+          color: item.variant.color,
+          price: item.variant.price,
+          compare_price: item.variant.compare_price,
+          sku: item.variant.sku,
+        } : null,
+        flash_sale: {
+          item_id: item.id,
+          variant_id: item.variant_id,
+          original_price: originalPrice,
+          sale_price: salePrice,
+          discount_percent: this.flashSalesService.calculateDiscountPercent(
+            originalPrice,
+            salePrice,
+          ),
+          max_quantity: item.max_quantity,
+          sold_quantity: item.sold_quantity,
+          remaining: item.max_quantity ? item.max_quantity - item.sold_quantity : null,
+        },
+      };
+    });
 
     return {
       success: true,
@@ -105,21 +132,48 @@ export class FlashSalesController {
     const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
 
     // Map products với thông tin flash sale
-    let products = flashSale.items.map((item) => ({
-      ...item.product,
-      flash_sale: {
-        item_id: item.id,
-        original_price: item.original_price,
-        sale_price: item.sale_price,
-        discount_percent: this.flashSalesService.calculateDiscountPercent(
-          Number(item.original_price),
-          Number(item.sale_price),
-        ),
-        max_quantity: item.max_quantity,
-        sold_quantity: item.sold_quantity,
-        remaining: item.max_quantity ? item.max_quantity - item.sold_quantity : null,
-      },
-    }));
+    // Nếu có variant, lấy giá từ variant; nếu không, lấy từ product
+    let products = flashSale.items.map((item) => {
+      // Xác định original_price: ưu tiên variant, sau đó product, cuối cùng là item.original_price
+      let originalPrice: number;
+      if (item.variant_id && item.variant) {
+        // Có variant: lấy giá từ variant (compare_price nếu có, không thì price)
+        originalPrice = Number(item.variant.compare_price || item.variant.price || item.original_price);
+      } else {
+        // Không có variant: lấy từ product hoặc item.original_price
+        originalPrice = Number(item.product.compare_price || item.product.price || item.original_price);
+      }
+
+      // Sale price luôn lấy từ flash_sale_items
+      const salePrice = Number(item.sale_price);
+
+      return {
+        ...item.product,
+        variant: item.variant ? {
+          id: item.variant.id,
+          variant_name: item.variant.variant_name,
+          size: item.variant.size,
+          flavor: item.variant.flavor,
+          color: item.variant.color,
+          price: item.variant.price,
+          compare_price: item.variant.compare_price,
+          sku: item.variant.sku,
+        } : null,
+        flash_sale: {
+          item_id: item.id,
+          variant_id: item.variant_id,
+          original_price: originalPrice,
+          sale_price: salePrice,
+          discount_percent: this.flashSalesService.calculateDiscountPercent(
+            originalPrice,
+            salePrice,
+          ),
+          max_quantity: item.max_quantity,
+          sold_quantity: item.sold_quantity,
+          remaining: item.max_quantity ? item.max_quantity - item.sold_quantity : null,
+        },
+      };
+    });
 
     // Filter by price
     if (minPrice) {

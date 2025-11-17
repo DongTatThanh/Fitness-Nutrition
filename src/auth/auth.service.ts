@@ -28,7 +28,6 @@ export class AuthService {
 
   async login(user: any) {
     const payload = { sub: user.user_id, email: user.email, role: (user.role || 'user') };
-    console.log(' Generating JWT for user:', user.email, 'with payload:', payload);
     return {
       access_token: this.jwtService.sign(payload),
     };
@@ -121,11 +120,8 @@ export class AuthService {
       try {
         await transporter.sendMail(mailOptions);
       } catch (err) {
-        // log but don't fail the request
-        console.error('Failed to send reset email', err);
+        // Silently fail - don't expose email errors to user
       }
-    } else {
-      console.warn('SMTP not configured — skip sending reset email. Set SMTP_HOST, SMTP_USER and SMTP_PASS to enable email delivery.');
     }
     // For testing you can return OTP if SHOW_RESET_TOKEN=true
     if (process.env.SHOW_RESET_TOKEN === 'true') return { message: 'Reset OTP generated', otp: otpCode };
@@ -133,32 +129,24 @@ export class AuthService {
   }
 
   async resetPassword(otp: string, newPassword: string) {
-    console.log('Looking for OTP:', otp);
-    
     const record = await this.passwordResetRepo.findOne({ where: { token: otp } });
     if (!record) {
-      console.log(' OTP not found in database');
       throw new NotFoundException('Mã OTP không hợp lệ');
     }
     
     if (record.expires_at < new Date()) {
-      console.log(' OTP expired');
       throw new UnauthorizedException('Mã OTP đã hết hạn');
     }
     
     const user = await this.usersService.findById(record.user_id);
     if (!user) {
-      console.log(' User not found');
       throw new NotFoundException('Người dùng không tồn tại');
     }
     
-    console.log(' OTP valid, updating password for user:', user.email);
     const hash = await bcrypt.hash(newPassword, 10);
     await this.usersService.updatePassword(user.user_id, hash);
     
-    // Remove used OTP
     await this.passwordResetRepo.delete(record.id);
-    console.log(' Password updated successfully');
     
     return { message: 'Đặt lại mật khẩu thành công' };
   }
@@ -213,29 +201,22 @@ export class AuthService {
   }
 
   async verifyOtpOnly(otp: string) {
-    console.log(' Verifying OTP only:', otp);
     const record = await this.passwordResetRepo.findOne({
       where: { token: otp }
     });
 
     if (!record) {
-      console.log(' OTP not found in database');
       throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn');
     }
 
-    console.log(' OTP found, checking expiry...');
     if (record.expires_at < new Date()) {
-      console.log(' OTP expired');
       throw new BadRequestException('Mã OTP đã hết hạn');
     }
 
     const user = await this.usersService.findById(record.user_id);
     if (!user) {
-      console.log(' User not found for OTP');
       throw new NotFoundException('User not found');
     }
-    
-    console.log(' OTP valid for user:', user.email);
     
     return { 
       message: 'Mã OTP hợp lệ', 

@@ -3,6 +3,7 @@ import { Controller, Delete, UseGuards } from "@nestjs/common";
 import { CartService } from "./cart.service";
 import { Get, Param, ParseIntPipe } from "@nestjs/common";
 import { AddToCartDto } from './DTO/cart.dto.entity';
+import { UpdateCartItemDto } from './DTO/update-cart-item.dto';
 import { Post, Body, Request } from "@nestjs/common";  
 import { CartItem } from './cart_Item.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -68,7 +69,7 @@ export class CartController {
     (
         @Request() req,
         @Param('id', ParseIntPipe) cartItemId: number,
-        @Body('quantity') quantity: number
+        @Body() updateDto: UpdateCartItemDto
     ) {
         if (!req.user?.id) {
             return {
@@ -77,7 +78,8 @@ export class CartController {
                 data: null
             };
         }
-        return this.cartService.updateCartItemQuantity(req.user.id, cartItemId, quantity);
+        // Chỉ lấy quantity, bỏ qua price (backend sẽ tính lại từ product)
+        return this.cartService.updateCartItemQuantity(req.user.id, cartItemId, updateDto.quantity);
 
 }
 }

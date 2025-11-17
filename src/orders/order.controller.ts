@@ -5,6 +5,7 @@ import { CreateOrderDto } from "./DTO/order.dto";
 import { OrderStatus } from "./enum/order-status.enum";
 import { Get, Query } from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { Order } from "./order.entity";
 
 
 

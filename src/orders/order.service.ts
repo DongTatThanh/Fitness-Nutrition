@@ -8,6 +8,7 @@ import { DiscountCodeService } from "../discount_code/discount_code.service";
 import { OrderStatus } from "./enum/order-status.enum";
 import { PaymentStatus } from "./enum/payment-status.enum";
 import { CreateOrderDto } from "./DTO/order.dto";
+import { OrdersGateway } from "../WebSocket/gteway";
 
 
 
@@ -21,7 +22,8 @@ export class OrderService
         @InjectRepository(OrderItem)
         private orderItemRepository: Repository<OrderItem>,
         private cartService: CartService,
-        private discountCodeService: DiscountCodeService
+        private discountCodeService: DiscountCodeService,
+        private ordersGateway: OrdersGateway,
     ) {}
 
     // tạo mã đơn hàng
@@ -150,6 +152,25 @@ export class OrderService
 
         await this.orderItemRepository.save(orderItems);
 
+        // Gửi thông báo đơn hàng mới qua WebSocket
+        try {
+            const products = orderItems.map(item => ({
+                name: item.product_name + (item.variant_name ? ` - ${item.variant_name}` : ''),
+                quantity: item.quantity,
+            }));
+
+            this.ordersGateway.sendNewOrder({
+                customer_name: savedOrder.customer_name,
+                products: products,
+                order_date: savedOrder.order_date,
+                shipping_city: savedOrder.shipping_city,
+                shipping_district: savedOrder.shipping_district,
+                product_image: orderItems[0]?.product_image,
+            });
+        } catch (error) {
+            // Silently fail - don't block order creation if WebSocket fails
+        }
+
         // xóa giỏ hàng sau khi tạo đơn hàng thành công 
         // await this.cartService.clearCart(userId);
 
@@ -208,11 +229,16 @@ export class OrderService
     {
         const order = await this.orderRepository.findOne({
             where: { id: orderId },
+            relations: ['items'],
         });
 
         if (!order) {
             throw new NotFoundException('Không tìm thấy đơn hàng');
         }
+
+        // Lưu trạng thái cũ để kiểm tra có thay đổi không
+        const wasPending = order.payment_status === PaymentStatus.PENDING;
+        const isNowPaid = paymentStatus === PaymentStatus.PAID;
 
         order.payment_status = paymentStatus;
 
@@ -221,7 +247,30 @@ export class OrderService
             order.confirmed_at = new Date();
         }
 
-        return await this.orderRepository.save(order);
+        const savedOrder = await this.orderRepository.save(order);
+
+        // Gửi thông báo WebSocket khi thanh toán thành công (chuyển từ PENDING sang PAID)
+        if (wasPending && isNowPaid) {
+            try {
+                const products = order.items.map(item => ({
+                    name: item.product_name + (item.variant_name ? ` - ${item.variant_name}` : ''),
+                    quantity: item.quantity,
+                }));
+
+                this.ordersGateway.sendNewOrder({
+                    customer_name: savedOrder.customer_name,
+                    products: products,
+                    order_date: savedOrder.order_date,
+                    shipping_city: savedOrder.shipping_city,
+                    shipping_district: savedOrder.shipping_district,
+                    product_image: order.items[0]?.product_image,
+                });
+            } catch (error) {
+                // Silently fail - don't block payment status update
+            }
+        }
+
+        return savedOrder;
     }
 
     // Hủy đơn hàng
@@ -257,4 +306,5 @@ export class OrderService
             relations: ['items'],
         });
     }
+
 }

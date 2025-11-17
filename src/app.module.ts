@@ -25,6 +25,7 @@ import { OrderModule } from './orders/order.module';
 import { PaymentModule } from './payment/payment.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { SearchModule } from './search/search.module';
+import { WebSocketModule } from './WebSocket/websocket.module';
 
 // import { PaymentModule } from './payment/payment.module';
 
@@ -67,6 +68,7 @@ import { SearchModule } from './search/search.module';
     PaymentModule,
     DashboardModule,
     SearchModule,
+    WebSocketModule,
   ],
   controllers: [AppController],
   providers: [AppService],

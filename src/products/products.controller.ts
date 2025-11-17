@@ -50,7 +50,9 @@ export class ProductsController {
             
             // Chạy bất đồng bộ, không block response
             this.productViewService.addView(req.user.id, id, ipAddress, userAgent)
-                .catch(err => console.error('Error saving product view:', err));
+                .catch(() => {
+                    // Silently fail - don't block response if view tracking fails
+                });
         }
         
         return product;
