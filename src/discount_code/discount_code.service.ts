@@ -2,6 +2,8 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { Repository } from 'typeorm';
 import { DiscountCode } from '../entities/discount_code.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CreateDiscountCodeDto } from './dto/create-discount-code.dto';
+import { UpdateDiscountCodeDto } from './dto/update-discount-code.dto';
 
 
 @Injectable()
@@ -46,7 +48,7 @@ export class DiscountCodeService {
     }
 
     // Tạo mã giảm giá mới
-    async create(createDiscountCodeDto: any): Promise<DiscountCode> {
+    async create(createDiscountCodeDto: CreateDiscountCodeDto): Promise<DiscountCode> {
         // Kiểm tra mã đã tồn tại chưa
         const existingCode = await this.discountCodeRepository.findOne({
             where: { code: createDiscountCodeDto.code }
@@ -61,7 +63,25 @@ export class DiscountCodeService {
             throw new BadRequestException('Ngày bắt đầu phải nhỏ hơn ngày kết thúc');
         }
 
-        const discountCode = this.discountCodeRepository.create(createDiscountCodeDto);
+        // Map DTO fields to entity fields
+        const discountCode = this.discountCodeRepository.create({
+            code: createDiscountCodeDto.code,
+            name: createDiscountCodeDto.name,
+            description: createDiscountCodeDto.description,
+            type: createDiscountCodeDto.discount_type, // map discount_type -> type
+            value: createDiscountCodeDto.discount_value, // map discount_value -> value
+            minimum_order_amount: createDiscountCodeDto.min_order_value, // map min_order_value -> minimum_order_amount
+            maximum_discount_amount: createDiscountCodeDto.max_discount_amount,
+            usage_limit: createDiscountCodeDto.usage_limit,
+            usage_limit_per_customer: createDiscountCodeDto.usage_limit_per_customer,
+            start_date: createDiscountCodeDto.start_date,
+            end_date: createDiscountCodeDto.end_date,
+            applicable_to: createDiscountCodeDto.applicable_type, // map applicable_type -> applicable_to
+            applicable_items: createDiscountCodeDto.applicable_items,
+            is_active: createDiscountCodeDto.is_active ?? true,
+            image: createDiscountCodeDto.image_url, // map image_url -> image
+        });
+        
         const saved = await this.discountCodeRepository.save(discountCode) as any as DiscountCode;
         return saved;
     }
@@ -125,7 +145,7 @@ export class DiscountCodeService {
     }
 
     // Cập nhật mã giảm giá
-    async update(id: number, updateDiscountCodeDto: any): Promise<DiscountCode> {
+    async update(id: number, updateDiscountCodeDto: UpdateDiscountCodeDto): Promise<DiscountCode> {
         const discountCode = await this.discountCodeRepository.findOne({
             where: { id }
         });
@@ -134,26 +154,75 @@ export class DiscountCodeService {
             throw new NotFoundException(`Mã giảm giá với ID ${id} không tồn tại`);
         }
 
-        // Kiểm tra nếu update code và code mới đã tồn tại
-        if (updateDiscountCodeDto.code && updateDiscountCodeDto.code !== discountCode.code) {
+        // Kiểm tra nếu update code và code mới đã tồn tại (nếu có trong DTO)
+        const codeFromDto = (updateDiscountCodeDto as any).code;
+        if (codeFromDto && codeFromDto !== discountCode.code) {
             const existingCode = await this.discountCodeRepository.findOne({
-                where: { code: updateDiscountCodeDto.code }
+                where: { code: codeFromDto }
             });
 
             if (existingCode) {
-                throw new BadRequestException(`Mã giảm giá "${updateDiscountCodeDto.code}" đã tồn tại`);
+                throw new BadRequestException(`Mã giảm giá "${codeFromDto}" đã tồn tại`);
             }
         }
 
         // Kiểm tra start_date và end_date nếu được cập nhật
-        const startDate = updateDiscountCodeDto.start_date ? new Date(updateDiscountCodeDto.start_date) : discountCode.start_date;
-        const endDate = updateDiscountCodeDto.end_date ? new Date(updateDiscountCodeDto.end_date) : discountCode.end_date;
+        const startDateFromDto = (updateDiscountCodeDto as any).start_date;
+        const endDateFromDto = (updateDiscountCodeDto as any).end_date;
+        const startDate = startDateFromDto ? new Date(startDateFromDto) : discountCode.start_date;
+        const endDate = endDateFromDto ? new Date(endDateFromDto) : discountCode.end_date;
 
         if (startDate >= endDate) {
             throw new BadRequestException('Ngày bắt đầu phải nhỏ hơn ngày kết thúc');
         }
 
-        Object.assign(discountCode, updateDiscountCodeDto);
+        // Only update fields that are provided in the DTO
+        if (updateDiscountCodeDto.code !== undefined) {
+            discountCode.code = updateDiscountCodeDto.code;
+        }
+        if (updateDiscountCodeDto.name !== undefined) {
+            discountCode.name = updateDiscountCodeDto.name;
+        }
+        if (updateDiscountCodeDto.description !== undefined) {
+            discountCode.description = updateDiscountCodeDto.description;
+        }
+        if (updateDiscountCodeDto.discount_type !== undefined) {
+            discountCode.type = updateDiscountCodeDto.discount_type;
+        }
+        if (updateDiscountCodeDto.discount_value !== undefined) {
+            discountCode.value = updateDiscountCodeDto.discount_value;
+        }
+        if (updateDiscountCodeDto.min_order_value !== undefined) {
+            discountCode.minimum_order_amount = updateDiscountCodeDto.min_order_value;
+        }
+        if (updateDiscountCodeDto.max_discount_amount !== undefined) {
+            discountCode.maximum_discount_amount = updateDiscountCodeDto.max_discount_amount;
+        }
+        if (updateDiscountCodeDto.usage_limit !== undefined) {
+            discountCode.usage_limit = updateDiscountCodeDto.usage_limit;
+        }
+        if (updateDiscountCodeDto.usage_limit_per_customer !== undefined) {
+            discountCode.usage_limit_per_customer = updateDiscountCodeDto.usage_limit_per_customer;
+        }
+        if (updateDiscountCodeDto.start_date !== undefined) {
+            discountCode.start_date = updateDiscountCodeDto.start_date;
+        }
+        if (updateDiscountCodeDto.end_date !== undefined) {
+            discountCode.end_date = updateDiscountCodeDto.end_date;
+        }
+        if (updateDiscountCodeDto.applicable_type !== undefined) {
+            discountCode.applicable_to = updateDiscountCodeDto.applicable_type;
+        }
+        if (updateDiscountCodeDto.applicable_items !== undefined) {
+            discountCode.applicable_items = updateDiscountCodeDto.applicable_items;
+        }
+        if (updateDiscountCodeDto.is_active !== undefined) {
+            discountCode.is_active = updateDiscountCodeDto.is_active;
+        }
+        if (updateDiscountCodeDto.image_url !== undefined) {
+            discountCode.image = updateDiscountCodeDto.image_url;
+        }
+        
         return await this.discountCodeRepository.save(discountCode);
     }
 
@@ -202,7 +271,7 @@ export class DiscountCodeService {
             throw new NotFoundException(`Mã giảm giá với ID ${id} không tồn tại`);
         }
 
-        discountCode.image_url = imageUrl;
+        discountCode.image = imageUrl;
         return await this.discountCodeRepository.save(discountCode);
     }
 }

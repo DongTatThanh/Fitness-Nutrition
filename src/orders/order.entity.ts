@@ -88,6 +88,15 @@ export class Order {
     @Column({ nullable: true })
     handled_by: number;
 
+    @Column({ length: 100, nullable: true })
+    tracking_number: string;
+
+    @Column({ length: 100, nullable: true })
+    shipping_carrier: string;
+
+    @Column({ type: 'timestamp', nullable: true })
+    processing_at: Date;
+
     @CreateDateColumn()
     order_date: Date;
 

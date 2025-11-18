@@ -1,5 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe } from "@nestjs/common";
 import { DiscountCodeService } from "./discount_code.service";
+import { CreateDiscountCodeDto } from "./dto/create-discount-code.dto";
+import { UpdateDiscountCodeDto } from "./dto/update-discount-code.dto";
 
 @Controller('discount-codes')
 export class DiscountCodeController {
@@ -17,16 +19,10 @@ export class DiscountCodeController {
         return this.discountCodeService.findActiveDiscountCodes();
     }
 
-    // Tìm mã giảm giá theo code
+    // Tìm mã giảm giá theo code - ĐẶT SAU 'active'
     @Get(':code')
     async findByCode(@Param('code') code: string) {
         return this.discountCodeService.findByCode(code);
-    }
-
-    // Tạo mã giảm giá mới
-    @Post()
-    async create(@Body() createDiscountCodeDto: any) {
-        return this.discountCodeService.create(createDiscountCodeDto);
     }
 
     // Validate và sử dụng mã giảm giá
@@ -35,11 +31,17 @@ export class DiscountCodeController {
         return this.discountCodeService.validateAndUseCode(code);
     }
 
+    // Tạo mã giảm giá mới
+    @Post()
+    async create(@Body() createDiscountCodeDto: CreateDiscountCodeDto) {
+        return this.discountCodeService.create(createDiscountCodeDto);
+    }
+
     // Cập nhật mã giảm giá
     @Put(':id')
     async update(
         @Param('id', ParseIntPipe) id: number,
-        @Body() updateDiscountCodeDto: any
+        @Body() updateDiscountCodeDto: UpdateDiscountCodeDto
     ) {
         return this.discountCodeService.update(id, updateDiscountCodeDto);
     }

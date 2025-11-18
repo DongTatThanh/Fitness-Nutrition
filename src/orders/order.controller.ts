@@ -1,8 +1,9 @@
-import { Controller, Param, ParseIntPipe, Post, Patch, BadRequestException, UseGuards } from "@nestjs/common";
+import { Controller, Param, ParseIntPipe, Post, Patch, BadRequestException, UseGuards, Delete } from "@nestjs/common";
 import { OrderService } from "./order.service";
 import { Request, Body } from "@nestjs/common";
 import { CreateOrderDto } from "./DTO/order.dto";
 import { OrderStatus } from "./enum/order-status.enum";
+import { PaymentStatus } from "./enum/payment-status.enum";
 import { Get, Query } from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { Order } from "./order.entity";
@@ -140,6 +141,7 @@ export class OrderController {
         const skip = (Number(page) - 1) * Number(limit);
         let query = this.orderService['orderRepository']
             .createQueryBuilder('order')
+            .leftJoinAndSelect('order.items', 'items')
             .skip(skip)
             .take(Number(limit));
 
@@ -168,5 +170,63 @@ export class OrderController {
             limit: Number(limit),
             pages: Math.ceil(total / Number(limit))
         };
+    }
+
+    // API Admin: Xem chi tiết đơn hàng
+    @Get('admin/:id')
+    async getAdminOrderDetail(@Param('id', ParseIntPipe) id: number) {
+        return this.orderService.getAdminOrderById(id);
+    }
+
+    // API Admin: Cập nhật trạng thái đơn hàng
+    @Patch('admin/:id/status')
+    async updateOrderStatus(
+        @Param('id', ParseIntPipe) id: number,
+        @Body('status') status: OrderStatus
+    ) {
+        return this.orderService.updateOrderStatus(id, status);
+    }
+
+    // API Admin: Cập nhật trạng thái thanh toán
+    @Patch('admin/:id/payment-status')
+    async updateOrderPaymentStatus(
+        @Param('id', ParseIntPipe) id: number,
+        @Body('payment_status') paymentStatus: PaymentStatus
+    ) {
+        return this.orderService.updatePaymentStatus(id, paymentStatus);
+    }
+
+    // API Admin: Cập nhật thông tin giao hàng
+    @Patch('admin/:id/shipping')
+    async updateShippingInfo(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() shippingInfo: {
+            tracking_number?: string;
+            shipping_carrier?: string;
+            shipped_at?: Date;
+        }
+    ) {
+        return this.orderService.updateShippingInfo(id, shippingInfo);
+    }
+
+    // API Admin: Hủy đơn hàng (admin)
+    @Post('admin/:id/cancel')
+    async adminCancelOrder(
+        @Param('id', ParseIntPipe) id: number,
+        @Body('reason') reason?: string
+    ) {
+        return this.orderService.adminCancelOrder(id, reason);
+    }
+
+    // API Admin: Xóa đơn hàng
+    @Delete('admin/:id')
+    async deleteOrder(@Param('id', ParseIntPipe) id: number) {
+        return this.orderService.deleteOrder(id);
+    }
+
+    // API Admin: Thống kê đơn hàng
+    @Get('admin/stats/summary')
+    async getOrderStats() {
+        return this.orderService.getOrderStats();
     }
 }

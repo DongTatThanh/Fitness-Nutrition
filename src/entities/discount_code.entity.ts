@@ -50,8 +50,8 @@ export class DiscountCode {
     @Column({ type: 'tinyint', default: 1 })
     is_active: boolean;
 
-    @Column({ type: 'varchar', length: 255, nullable: true, name: 'image' })
-    image_url: string;
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    image: string;
 
     @Column({ nullable: true })
     created_by: number;

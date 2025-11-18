@@ -307,4 +307,181 @@ export class OrderService
         });
     }
 
+    // ===== ADMIN METHODS =====
+
+    // Admin: Lấy chi tiết đơn hàng
+    async getAdminOrderById(orderId: number): Promise<Order> {
+        const order = await this.orderRepository.findOne({
+            where: { id: orderId },
+            relations: ['items', 'items.product', 'items.variant'],
+        });
+
+        if (!order) {
+            throw new NotFoundException('Không tìm thấy đơn hàng');
+        }
+
+        return order;
+    }
+
+    // Admin: Cập nhật trạng thái đơn hàng
+    async updateOrderStatus(orderId: number, status: OrderStatus): Promise<Order> {
+        const order = await this.orderRepository.findOne({
+            where: { id: orderId },
+        });
+
+        if (!order) {
+            throw new NotFoundException('Không tìm thấy đơn hàng');
+        }
+
+        // Validate status transitions
+        if (order.status === OrderStatus.CANCELLED) {
+            throw new BadRequestException('Không thể thay đổi trạng thái đơn đã hủy');
+        }
+
+        if (order.status === OrderStatus.DELIVERED && status !== OrderStatus.DELIVERED) {
+            throw new BadRequestException('Không thể thay đổi trạng thái đơn đã giao');
+        }
+
+        order.status = status;
+
+        // Update timestamps
+        switch (status) {
+            case OrderStatus.CONFIRMED:
+                if (!order.confirmed_at) order.confirmed_at = new Date();
+                break;
+            case OrderStatus.PROCESSING:
+                if (!order.processing_at) order.processing_at = new Date();
+                break;
+            case OrderStatus.SHIPPED:
+                if (!order.shipped_at) order.shipped_at = new Date();
+                break;
+            case OrderStatus.DELIVERED:
+                if (!order.delivered_at) order.delivered_at = new Date();
+                break;
+            case OrderStatus.CANCELLED:
+                if (!order.cancelled_at) order.cancelled_at = new Date();
+                break;
+        }
+
+        return await this.orderRepository.save(order);
+    }
+
+    // Admin: Cập nhật thông tin vận chuyển
+    async updateShippingInfo(
+        orderId: number,
+        shippingInfo: {
+            tracking_number?: string;
+            shipping_carrier?: string;
+            shipped_at?: Date;
+        }
+    ): Promise<Order> {
+        const order = await this.orderRepository.findOne({
+            where: { id: orderId },
+        });
+
+        if (!order) {
+            throw new NotFoundException('Không tìm thấy đơn hàng');
+        }
+
+        if (shippingInfo.tracking_number) {
+            order.tracking_number = shippingInfo.tracking_number;
+        }
+
+        if (shippingInfo.shipping_carrier) {
+            order.shipping_carrier = shippingInfo.shipping_carrier;
+        }
+
+        if (shippingInfo.shipped_at) {
+            order.shipped_at = shippingInfo.shipped_at;
+            if (order.status === OrderStatus.PROCESSING || order.status === OrderStatus.CONFIRMED) {
+                order.status = OrderStatus.SHIPPED;
+            }
+        }
+
+        return await this.orderRepository.save(order);
+    }
+
+    // Admin: Hủy đơn hàng
+    async adminCancelOrder(orderId: number, reason?: string): Promise<Order> {
+        const order = await this.orderRepository.findOne({
+            where: { id: orderId },
+        });
+
+        if (!order) {
+            throw new NotFoundException('Không tìm thấy đơn hàng');
+        }
+
+        if (order.status === OrderStatus.DELIVERED) {
+            throw new BadRequestException('Không thể hủy đơn đã giao');
+        }
+
+        order.status = OrderStatus.CANCELLED;
+        order.cancelled_at = new Date();
+
+        if (reason) {
+            order.notes = (order.notes || '') + `\n[Admin hủy] ${reason}`;
+        }
+
+        return await this.orderRepository.save(order);
+    }
+
+    // Admin: Xóa đơn hàng (soft delete)
+    async deleteOrder(orderId: number): Promise<{ message: string }> {
+        const order = await this.orderRepository.findOne({
+            where: { id: orderId },
+        });
+
+        if (!order) {
+            throw new NotFoundException('Không tìm thấy đơn hàng');
+        }
+
+        await this.orderRepository.remove(order);
+
+        return { message: `Đã xóa đơn hàng ${order.order_number}` };
+    }
+
+    // Admin: Thống kê đơn hàng
+    async getOrderStats(): Promise<any> {
+        const [
+            totalOrders,
+            pendingOrders,
+            confirmedOrders,
+            processingOrders,
+            shippedOrders,
+            deliveredOrders,
+            cancelledOrders,
+            paidOrders,
+        ] = await Promise.all([
+            this.orderRepository.count(),
+            this.orderRepository.count({ where: { status: OrderStatus.PENDING } }),
+            this.orderRepository.count({ where: { status: OrderStatus.CONFIRMED } }),
+            this.orderRepository.count({ where: { status: OrderStatus.PROCESSING } }),
+            this.orderRepository.count({ where: { status: OrderStatus.SHIPPED } }),
+            this.orderRepository.count({ where: { status: OrderStatus.DELIVERED } }),
+            this.orderRepository.count({ where: { status: OrderStatus.CANCELLED } }),
+            this.orderRepository.count({ where: { payment_status: PaymentStatus.PAID } }),
+        ]);
+
+        // Calculate total revenue from paid orders
+        const revenueResult = await this.orderRepository
+            .createQueryBuilder('order')
+            .select('SUM(order.total)', 'total')
+            .where('order.payment_status = :status', { status: PaymentStatus.PAID })
+            .getRawOne();
+
+        return {
+            totalOrders,
+            byStatus: {
+                pending: pendingOrders,
+                confirmed: confirmedOrders,
+                processing: processingOrders,
+                shipped: shippedOrders,
+                delivered: deliveredOrders,
+                cancelled: cancelledOrders,
+            },
+            paidOrders,
+            totalRevenue: parseFloat(revenueResult?.total || 0),
+        };
+    }
+
 }
