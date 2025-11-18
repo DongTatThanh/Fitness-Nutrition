@@ -111,8 +111,8 @@ export class DashboardService {
             .getRawMany();
 
         return result.map(item => ({
-            product_id: item.product_id.toString(),
-            product_name: item.product_name,
+            product_id: item.product_id ? item.product_id.toString() : 'N/A',
+            product_name: item.product_name || 'Unknown Product',
             total_sold: parseInt(item.total_sold || '0'),
             total_revenue: parseFloat(item.total_revenue || '0'),
         }));

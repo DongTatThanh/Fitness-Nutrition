@@ -1,9 +1,18 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+} from 'typeorm';
 import { Brand } from '../brands/brand.entity';
 import { Category } from '../categories/category.entity';
 import { ProductVariant } from './product-variant.entity';
 import { ProductReview } from './product-review.entity';
 import { ProductAttribute } from './product-attribute.entity';
+import { ProductImage } from './product-image.entity';
 
 
 
@@ -62,7 +71,7 @@ export class Product {
   low_stock_threshold: number;
 
   @Column({ type: 'date', nullable: true })
-  expiry_date: Date;
+  expiry_date: Date | null;
 
   @Column({ length: 50, nullable: true })
   batch_number: string;
@@ -101,7 +110,7 @@ export class Product {
   status: string;
 
   @Column({ type: 'timestamp', nullable: true })
-  published_at: Date;
+  published_at: Date | null;
 
   @Column({ type: 'int', nullable: true })
   created_by: number;
@@ -129,4 +138,7 @@ export class Product {
 
   @OneToMany(() => ProductReview, (review) => review.product)
   reviews: ProductReview[];
+
+  @OneToMany(() => ProductImage, (image) => image.product, { cascade: true })
+  images: ProductImage[];
 }

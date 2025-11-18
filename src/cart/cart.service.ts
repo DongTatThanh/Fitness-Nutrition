@@ -116,12 +116,12 @@ export class CartService {
             }
 
             if (existingItem) {
-                // cập nhật số lượng nếu sản phẩm đã tồn tại trong giỏ hàng
+                // cập nhật số lượng nếu sản phẩm đã tồn tại trong giỏ hàng 
                 // Giữ nguyên giá cũ nếu đã có (để tránh thay đổi giá khi flash sale kết thúc)
                 existingItem.quantity += AddToCartDto.quantity;
                 await this.cartItemRepository.save(existingItem);
             } else {
-                // tạo mới nếu sản phẩm chưa có trong giỏ hàng
+                // tạo mới nếu sản phẩm chưa có trong giỏ hàng 
                 // Lưu giá flash sale nếu có
                 const cartItem = this.cartItemRepository.create({
                     cart_id: cart.id, 

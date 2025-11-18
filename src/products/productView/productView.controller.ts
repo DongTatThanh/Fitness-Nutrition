@@ -12,17 +12,6 @@ export class ProductViewController {
 
 
   // lấy sản phẩm user đã xem 
-  @Get(':userId/products')
-  async getProductViewsByUser(@Param('userId', ParseIntPipe) user_Id: number) {
-    const views =  await this.productViewService.getProductViewsByUser(user_Id);
-    return {
-      user : user_Id,
-      totalViews : views.length,
-      viewProducts : views.map(view => ({
-        viewedAt: view.viewedAt,
-        product: view.product,
-      })),
-    }
+ 
   }
 
-}

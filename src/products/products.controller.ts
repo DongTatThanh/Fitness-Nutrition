@@ -1,7 +1,20 @@
-import { Controller, Get, Query, Param, ParseIntPipe, Request } from '@nestjs/common';    
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  Query,
+  Request,
+} from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductViewService } from '../product-views/product-view.service';
-import { get } from 'http';
+import { CreateProductDto } from './dto/createProductDto';
+import { UpdateProductDto } from './dto/updateproductDto';
+import { AdminProductFilterDto } from './dto/getProductDto';
 
 
 
@@ -78,7 +91,7 @@ export class ProductsController {
     return this.productsService.getProductsByCategory({
       categoryId: Number(categoryId),
       isFlashSale: isFlashSale,
-      priceMin: minPrice ? Number(minPrice) : undefined,
+       priceMin: minPrice ? Number(minPrice) : undefined,
       priceMax: maxPrice ? Number(maxPrice) : undefined,
       brandId: brandId ? Number(brandId) : undefined,
       sort,
@@ -89,36 +102,42 @@ export class ProductsController {
 
   // API Admin: Lấy danh sách sản phẩm phân trang
   @Get('admin/list')
-  async getAdminProducts(
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '10',
-    @Query('search') search?: string,
-    @Query('status') status?: string
-  ) {
-    const skip = (Number(page) - 1) * Number(limit);
-    let query = this.productsService['productsRepository']
-      .createQueryBuilder('product')
-      .skip(skip)
-      .take(Number(limit));
-
-    if (search) {
-      query = query.where('product.name LIKE :search OR product.description LIKE :search', {
-        search: `%${search}%`
-      });
-    }
-
-    if (status) {
-      query = query.andWhere('product.status = :status', { status });
-    }
-
-    const [products, total] = await query.getManyAndCount();
-
-    return {
-      data: products,
-      total,
-      page: Number(page),
-      limit: Number(limit),
-      pages: Math.ceil(total / Number(limit))
-    };
+  async getAdminProducts(@Query() query: AdminProductFilterDto) {
+    return this.productsService.getAdminProducts(query);
   }
+
+  // Migration: Fix featured_image cho các sản phẩm cũ
+  @Post('admin/fix-images')
+  async fixProductImages() {
+    return this.productsService.fixProductImages();
+  }
+
+  @Get('admin/:id')
+  async getAdminProductById(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.getAdminProductById(id);
+  }
+
+
+  //------------------------admin-------------------
+  // admin thêm sản phẩm mới 
+  @Post('admin')
+  async createProductAdmin(@Body() product: CreateProductDto) {
+    return this.productsService.createProductAdmin(product);
+  }
+  
+
+  // admin cập nhật sản phẩm 
+  @Put(['admin/:id', 'admin/update/:id'])
+  async updateProductAdmin(@Param('id', ParseIntPipe) id: number, @Body() product: UpdateProductDto) {
+    return this.productsService.updateProductAdmin(id, product);
+  }
+  
+  // admin xóa sản phẩm 
+  @Delete(['admin/:id', 'admin/delete/:id'])
+  async deleteProductAdmin(@Param('id', ParseIntPipe) id: number) {
+    await this.productsService.deleteProductAdmin(id);
+    return { success: true };
+  }
+  
+  
 }

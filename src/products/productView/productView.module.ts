@@ -15,5 +15,6 @@ import { ProductViewController } from './productView.controller';
    controllers: [ProductViewController],
    
    
+   
 })
 export class ProductViewModule {}
