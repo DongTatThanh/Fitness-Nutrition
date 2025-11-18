@@ -5,9 +5,10 @@ import { ProductsController } from './products.controller';
 import { Product } from './product.entity';
 import { ProductViewModule } from '../product-views/product-view.module';
 import { ProductImage } from './product-image.entity';
+import { ProductVariant } from './product-variant.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Product, ProductImage]), ProductViewModule],
+  imports: [TypeOrmModule.forFeature([Product, ProductImage, ProductVariant]), ProductViewModule],
   providers: [ProductsService],
   controllers: [ProductsController],
   exports: [ProductsService],

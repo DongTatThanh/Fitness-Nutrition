@@ -1,20 +1,10 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseIntPipe,
-  Post,
-  Put,
-  Query,
-  Request,
-} from '@nestjs/common';
+import { Controller, Get, Query, Param, ParseIntPipe, Request, Post, Body, Put, Delete } from '@nestjs/common';    
 import { ProductsService } from './products.service';
 import { ProductViewService } from '../product-views/product-view.service';
+import { CreateVariantDto, UpdateVariantDto } from './dto/variant.dto';
 import { CreateProductDto } from './dto/createProductDto';
 import { UpdateProductDto } from './dto/updateproductDto';
-import { AdminProductFilterDto } from './dto/getProductDto';
+import { get } from 'http';
 
 
 
@@ -63,9 +53,7 @@ export class ProductsController {
             
             // Chạy bất đồng bộ, không block response
             this.productViewService.addView(req.user.id, id, ipAddress, userAgent)
-                .catch(() => {
-                    // Silently fail - don't block response if view tracking fails
-                });
+                .catch(err => console.error('Error saving product view:', err));
         }
         
         return product;
@@ -91,7 +79,7 @@ export class ProductsController {
     return this.productsService.getProductsByCategory({
       categoryId: Number(categoryId),
       isFlashSale: isFlashSale,
-       priceMin: minPrice ? Number(minPrice) : undefined,
+      priceMin: minPrice ? Number(minPrice) : undefined,
       priceMax: maxPrice ? Number(maxPrice) : undefined,
       brandId: brandId ? Number(brandId) : undefined,
       sort,
@@ -102,42 +90,103 @@ export class ProductsController {
 
   // API Admin: Lấy danh sách sản phẩm phân trang
   @Get('admin/list')
-  async getAdminProducts(@Query() query: AdminProductFilterDto) {
-    return this.productsService.getAdminProducts(query);
+  async getAdminProducts(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+    @Query('search') search?: string,
+    @Query('status') status?: string
+  ) {
+    const skip = (Number(page) - 1) * Number(limit);
+    let query = this.productsService['productsRepository']
+      .createQueryBuilder('product')
+      .skip(skip)
+      .take(Number(limit));
+
+    if (search) {
+      query = query.where('product.name LIKE :search OR product.description LIKE :search', {
+        search: `%${search}%`
+      });
+    }
+
+    if (status) {
+      query = query.andWhere('product.status = :status', { status });
+    }
+
+    const [products, total] = await query.getManyAndCount();
+
+    return {
+      data: products,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      pages: Math.ceil(total / Number(limit))
+    };
   }
 
-  // Migration: Fix featured_image cho các sản phẩm cũ
-  @Post('admin/fix-images')
-  async fixProductImages() {
-    return this.productsService.fixProductImages();
+  // ============== VARIANT MANAGEMENT ==============
+  
+  // Lấy danh sách variants của sản phẩm
+  @Get(':id/variants')
+  async getProductVariants(@Param('id', ParseIntPipe) productId: number) {
+    return this.productsService.getProductVariants(productId);
   }
 
+  // Thêm variant mới cho sản phẩm
+  @Post(':id/variants')
+  async addProductVariant(
+    @Param('id', ParseIntPipe) productId: number,
+    @Body() variantDto: CreateVariantDto
+  ) {
+    return this.productsService.addProductVariant(productId, variantDto);
+  }
+
+  // Cập nhật variant
+  @Put('variants/:variantId')
+  async updateVariant(
+    @Param('variantId', ParseIntPipe) variantId: number,
+    @Body() variantDto: UpdateVariantDto
+  ) {
+    return this.productsService.updateVariant(variantId, variantDto);
+  }
+
+  // Xóa variant
+  @Delete('variants/:variantId')
+  async deleteVariant(@Param('variantId', ParseIntPipe) variantId: number) {
+    return this.productsService.deleteVariant(variantId);
+  }
+
+  // ============== ADMIN PRODUCT MANAGEMENT ==============
+  
+  // Admin: Lấy chi tiết sản phẩm
   @Get('admin/:id')
   async getAdminProductById(@Param('id', ParseIntPipe) id: number) {
     return this.productsService.getAdminProductById(id);
   }
 
-
-  //------------------------admin-------------------
-  // admin thêm sản phẩm mới 
+  // Admin: Tạo sản phẩm mới
   @Post('admin')
-  async createProductAdmin(@Body() product: CreateProductDto) {
-    return this.productsService.createProductAdmin(product);
+  async createProductAdmin(@Body() productDto: CreateProductDto) {
+    return this.productsService.createProductAdmin(productDto);
   }
-  
 
-  // admin cập nhật sản phẩm 
-  @Put(['admin/:id', 'admin/update/:id'])
-  async updateProductAdmin(@Param('id', ParseIntPipe) id: number, @Body() product: UpdateProductDto) {
-    return this.productsService.updateProductAdmin(id, product);
+  // Admin: Cập nhật sản phẩm
+  @Put('admin/:id')
+  async updateProductAdmin(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() productDto: UpdateProductDto
+  ) {
+    return this.productsService.updateProductAdmin(id, productDto);
   }
-  
-  // admin xóa sản phẩm 
-  @Delete(['admin/:id', 'admin/delete/:id'])
+
+  // Admin: Xóa sản phẩm
+  @Delete('admin/:id')
   async deleteProductAdmin(@Param('id', ParseIntPipe) id: number) {
-    await this.productsService.deleteProductAdmin(id);
-    return { success: true };
+    return this.productsService.deleteProductAdmin(id);
   }
-  
-  
+
+  // Admin: Fix ảnh sản phẩm
+  @Post('admin/fix-images')
+  async fixProductImages() {
+    return this.productsService.fixProductImages();
+  }
 }

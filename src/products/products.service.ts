@@ -4,9 +4,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 import { Product } from 'src/products/product.entity';
 import { ProductImage } from './product-image.entity';
+import { ProductVariant } from './product-variant.entity';
 import { CreateProductDto } from './dto/createProductDto';
 import { UpdateProductDto } from './dto/updateproductDto';
 import { AdminProductFilterDto } from './dto/getProductDto';
+import { CreateVariantDto, UpdateVariantDto } from './dto/variant.dto';
 
 
 
@@ -17,6 +19,8 @@ export class ProductsService {
     private readonly productsRepository: Repository<Product>,
     @InjectRepository(ProductImage)
     private readonly productImageRepository: Repository<ProductImage>,
+    @InjectRepository(ProductVariant)
+    private readonly variantRepository: Repository<ProductVariant>,
   ) {}
  /// lấy tất cả các danh sách sản phẩm
 
@@ -299,7 +303,15 @@ if (filter.categoryId) {
       throw new NotFoundException(`Product với ID ${id} không tồn tại`);
     }
 
-    return product;
+    // Format lại gallery_images từ relation images để frontend dễ xử lý
+    const galleryImages = product.images 
+      ? product.images.sort((a, b) => a.sortOrder - b.sortOrder).map(img => img.imageUrl)
+      : [];
+
+    return {
+      ...product,
+      gallery_images: galleryImages,
+    };
   }
 
   // admin thêm sản phẩm mới
@@ -366,6 +378,112 @@ if (filter.categoryId) {
       message: `Đã fix ${fixed} sản phẩm thiếu ảnh đại diện`,
       total: products.length,
       fixed,
+    };
+  }
+
+  // ============== VARIANT MANAGEMENT ==============
+  
+  // Lấy danh sách variants của sản phẩm
+  async getProductVariants(productId: number) {
+    const product = await this.productsRepository.findOne({ where: { id: productId } });
+    if (!product) {
+      throw new NotFoundException('Không tìm thấy sản phẩm');
+    }
+
+    const variants = await this.variantRepository.find({
+      where: { product_id: productId },
+      order: { id: 'ASC' }
+    });
+
+    return {
+      success: true,
+      data: variants
+    };
+  }
+
+  // Thêm variant mới
+  async addProductVariant(productId: number, variantDto: CreateVariantDto) {
+    const product = await this.productsRepository.findOne({ where: { id: productId } });
+    if (!product) {
+      throw new NotFoundException('Không tìm thấy sản phẩm');
+    }
+
+    const variant = this.variantRepository.create({
+      product_id: productId,
+      variant_name: variantDto.variantName,
+      sku: variantDto.sku || `${product.sku}-V${Date.now()}`,
+      price: variantDto.price,
+      compare_price: variantDto.comparePrice,
+      inventory_quantity: variantDto.quantity,
+      image_url: variantDto.image,
+      is_active: variantDto.status === 'active',
+    });
+
+    // Parse attribute_values if provided
+    if (variantDto.attributeValues) {
+      const attrs = variantDto.attributeValues;
+      if (attrs.flavor) variant.flavor = attrs.flavor;
+      if (attrs.size) variant.size = attrs.size;
+      if (attrs.color) variant.color = attrs.color;
+      if (attrs.weight) variant.weight = attrs.weight;
+      if (attrs.weight_unit) variant.weight_unit = attrs.weight_unit;
+    }
+
+    await this.variantRepository.save(variant);
+
+    return {
+      success: true,
+      message: 'Đã thêm variant thành công',
+      data: variant
+    };
+  }
+
+  // Cập nhật variant
+  async updateVariant(variantId: number, variantDto: UpdateVariantDto) {
+    const variant = await this.variantRepository.findOne({ where: { id: variantId } });
+    if (!variant) {
+      throw new NotFoundException('Không tìm thấy variant');
+    }
+
+    if (variantDto.variantName !== undefined) variant.variant_name = variantDto.variantName;
+    if (variantDto.sku !== undefined) variant.sku = variantDto.sku;
+    if (variantDto.price !== undefined) variant.price = variantDto.price;
+    if (variantDto.comparePrice !== undefined) variant.compare_price = variantDto.comparePrice;
+    if (variantDto.quantity !== undefined) variant.inventory_quantity = variantDto.quantity;
+    if (variantDto.image !== undefined) variant.image_url = variantDto.image;
+    if (variantDto.status !== undefined) variant.is_active = variantDto.status === 'active';
+
+    // Update attributes if provided
+    if (variantDto.attributeValues) {
+      const attrs = variantDto.attributeValues;
+      if (attrs.flavor !== undefined) variant.flavor = attrs.flavor;
+      if (attrs.size !== undefined) variant.size = attrs.size;
+      if (attrs.color !== undefined) variant.color = attrs.color;
+      if (attrs.weight !== undefined) variant.weight = attrs.weight;
+      if (attrs.weight_unit !== undefined) variant.weight_unit = attrs.weight_unit;
+    }
+
+    await this.variantRepository.save(variant);
+
+    return {
+      success: true,
+      message: 'Đã cập nhật variant thành công',
+      data: variant
+    };
+  }
+
+  // Xóa variant
+  async deleteVariant(variantId: number) {
+    const variant = await this.variantRepository.findOne({ where: { id: variantId } });
+    if (!variant) {
+      throw new NotFoundException('Không tìm thấy variant');
+    }
+
+    await this.variantRepository.remove(variant);
+
+    return {
+      success: true,
+      message: 'Đã xóa variant thành công'
     };
   }
 }

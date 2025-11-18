@@ -107,10 +107,9 @@ export class CreateProductDto {
   @IsOptional()
   @IsNumber()
   quantity?: number;
+ ngườ 
+ 
 
-  @IsOptional()
-  @IsNumber()
-  quantity?: number;
 
   @IsOptional()
   @IsNumber()
