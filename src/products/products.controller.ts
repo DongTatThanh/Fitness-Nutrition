@@ -88,39 +88,72 @@ export class ProductsController {
     });
   }
 
-  // API Admin: Lấy danh sách sản phẩm phân trang
+  // ============== ADMIN PRODUCT MANAGEMENT ==============
+
+  
+  // Admin: Lấy danh sách sản phẩm với filter đầy đủ (Phân trang + Tìm kiếm + Lọc)
   @Get('admin/list')
   async getAdminProducts(
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '10',
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
     @Query('search') search?: string,
-    @Query('status') status?: string
+    @Query('status') status?: 'draft' | 'active' | 'inactive' | 'out_of_stock',
+    @Query('brandId') brandId?: string,
+    @Query('categoryId') categoryId?: string,
+    @Query('isFeatured') isFeatured?: string,
+    @Query('isNewArrival') isNewArrival?: string,
+    @Query('isBestseller') isBestseller?: string,
+    @Query('isOnSale') isOnSale?: string,
+    @Query('sortBy') sortBy?: 'name' | 'price' | 'created_at' | 'inventory_quantity',
+    @Query('sortOrder') sortOrder?: 'ASC' | 'DESC'
   ) {
-    const skip = (Number(page) - 1) * Number(limit);
-    let query = this.productsService['productsRepository']
-      .createQueryBuilder('product')
-      .skip(skip)
-      .take(Number(limit));
+    return this.productsService.getAdminProducts({
+      page: page ? Number(page) : 1,
+      limit: limit ? Number(limit) : 10,
+      search,
+      status,
+      brandId: brandId ? Number(brandId) : undefined,
+      categoryId: categoryId ? Number(categoryId) : undefined,
+      isFeatured: isFeatured === 'true' ? true : isFeatured === 'false' ? false : undefined,
+      isNewArrival: isNewArrival === 'true' ? true : isNewArrival === 'false' ? false : undefined,
+      isBestseller: isBestseller === 'true' ? true : isBestseller === 'false' ? false : undefined,
+      isOnSale: isOnSale === 'true' ? true : isOnSale === 'false' ? false : undefined,
+      sortBy: sortBy || 'created_at',
+      sortOrder: sortOrder || 'DESC'
+    });
+  }
 
-    if (search) {
-      query = query.where('product.name LIKE :search OR product.description LIKE :search', {
-        search: `%${search}%`
-      });
-    }
+  // Admin: Fix ảnh sản phẩm
+  @Post('admin/fix-images')
+  async fixProductImages() {
+    return this.productsService.fixProductImages();
+  }
 
-    if (status) {
-      query = query.andWhere('product.status = :status', { status });
-    }
+  // Admin: Tạo sản phẩm mới
+  @Post('admin')
+  async createProductAdmin(@Body() productDto: CreateProductDto) {
+    return this.productsService.createProductAdmin(productDto);
+  }
 
-    const [products, total] = await query.getManyAndCount();
+  // Admin: Lấy chi tiết sản phẩm
+  @Get('admin/:id')
+  async getAdminProductById(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.getAdminProductById(id);
+  }
 
-    return {
-      data: products,
-      total,
-      page: Number(page),
-      limit: Number(limit),
-      pages: Math.ceil(total / Number(limit))
-    };
+  // Admin: Cập nhật sản phẩm
+  @Put('admin/:id')
+  async updateProductAdmin(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() productDto: UpdateProductDto
+  ) {
+    return this.productsService.updateProductAdmin(id, productDto);
+  }
+
+  // Admin: Xóa sản phẩm
+  @Delete('admin/:id')
+  async deleteProductAdmin(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.deleteProductAdmin(id);
   }
 
   // ============== VARIANT MANAGEMENT ==============
@@ -153,40 +186,5 @@ export class ProductsController {
   @Delete('variants/:variantId')
   async deleteVariant(@Param('variantId', ParseIntPipe) variantId: number) {
     return this.productsService.deleteVariant(variantId);
-  }
-
-  // ============== ADMIN PRODUCT MANAGEMENT ==============
-  
-  // Admin: Lấy chi tiết sản phẩm
-  @Get('admin/:id')
-  async getAdminProductById(@Param('id', ParseIntPipe) id: number) {
-    return this.productsService.getAdminProductById(id);
-  }
-
-  // Admin: Tạo sản phẩm mới
-  @Post('admin')
-  async createProductAdmin(@Body() productDto: CreateProductDto) {
-    return this.productsService.createProductAdmin(productDto);
-  }
-
-  // Admin: Cập nhật sản phẩm
-  @Put('admin/:id')
-  async updateProductAdmin(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() productDto: UpdateProductDto
-  ) {
-    return this.productsService.updateProductAdmin(id, productDto);
-  }
-
-  // Admin: Xóa sản phẩm
-  @Delete('admin/:id')
-  async deleteProductAdmin(@Param('id', ParseIntPipe) id: number) {
-    return this.productsService.deleteProductAdmin(id);
-  }
-
-  // Admin: Fix ảnh sản phẩm
-  @Post('admin/fix-images')
-  async fixProductImages() {
-    return this.productsService.fixProductImages();
   }
 }

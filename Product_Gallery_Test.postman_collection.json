@@ -1,0 +1,87 @@
+{
+  "info": {
+    "name": "Product Gallery Test",
+    "description": "Test API gallery ảnh sản phẩm",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Get Product Detail (User)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3201/products/1",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3201",
+          "path": ["products", "1"]
+        },
+        "description": "Lấy chi tiết sản phẩm cho user - Kiểm tra có images array không"
+      }
+    },
+    {
+      "name": "2. Get Product Detail (Admin)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3201/products/admin/1",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3201",
+          "path": ["products", "admin", "1"]
+        },
+        "description": "Lấy chi tiết sản phẩm cho admin - Kiểm tra có gallery_images array không"
+      }
+    },
+    {
+      "name": "3. Create Product with Gallery",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test Product with Gallery\",\n  \"slug\": \"test-product-gallery\",\n  \"sku\": \"TEST-001\",\n  \"brand_id\": 1,\n  \"category_id\": 1,\n  \"short_description\": \"Sản phẩm test gallery ảnh\",\n  \"description\": \"Mô tả chi tiết sản phẩm test\",\n  \"price\": 500000,\n  \"compare_price\": 600000,\n  \"inventory_quantity\": 100,\n  \"featured_image\": \"https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=800\",\n  \"galleryImages\": [\n    \"https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=800\",\n    \"https://images.unsplash.com/photo-1579722820308-d74e571900a9?w=800\",\n    \"https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800\",\n    \"https://images.unsplash.com/photo-1594737625785-08d9610b447a?w=800\",\n    \"https://images.unsplash.com/photo-1584464491033-06628f3a6b7b?w=800\"\n  ],\n  \"status\": \"active\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3201/products/admin",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3201",
+          "path": ["products", "admin"]
+        },
+        "description": "Tạo sản phẩm mới với 5 ảnh gallery"
+      }
+    },
+    {
+      "name": "4. Update Product Gallery",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"galleryImages\": [\n    \"https://images.unsplash.com/photo-1605296867424-35fc25c9212a?w=800\",\n    \"https://images.unsplash.com/photo-1607962837359-5e7e89f86776?w=800\",\n    \"https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800\"\n  ]\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3201/products/admin/1",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3201",
+          "path": ["products", "admin", "1"]
+        },
+        "description": "Cập nhật gallery ảnh cho sản phẩm ID=1 (thay 1 bằng ID thực tế)"
+      }
+    }
+  ]
+}

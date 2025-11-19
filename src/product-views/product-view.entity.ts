@@ -7,7 +7,7 @@ export class ProductView {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column({ nullable: true })
     user_id: number;
 
     @Column()

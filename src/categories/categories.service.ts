@@ -106,7 +106,9 @@ export class CategoriesService {
     } 
 
     if (status) {
-      query = query.andWhere('category.status = :status', { status });
+      query = query.andWhere('category.is_active = :is_active', { 
+        is_active: status === 'active' ? 1 : 0 
+      });
     }
 
     query = query.orderBy('category.sort_order', 'ASC')
@@ -130,7 +132,7 @@ export class CategoriesService {
     {
       return await this.categoriesRepository
         .createQueryBuilder('category')
-        .leftJoinAndSelect('category.parent ', 'parentCategory')
+        .leftJoinAndSelect('category.parent', 'parentCategory')
         .leftJoinAndSelect('category.children', 'childCategories')
           .where('category.id = :id', { id })
           .getOne();

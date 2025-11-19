@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { ProductView } from './product-view.entity';
 
 @Injectable()
@@ -12,15 +12,28 @@ export class ProductViewService {
 
     // Thêm sản phẩm vào lịch sử xem
     async addView(
-        userId: number, 
+        userId: number | null, 
         productId: number, 
         ipAddress?: string, 
         userAgent?: string
     ): Promise<ProductView> {
-        // Kiểm tra xem user đã xem sản phẩm này chưa
-        const existingView = await this.productViewRepository.findOne({
-            where: { user_id: userId, product_id: productId }
-        });
+        let existingView: ProductView | null = null;
+
+        if (userId) {
+            // Kiểm tra xem user đã xem sản phẩm này chưa
+            existingView = await this.productViewRepository.findOne({
+                where: { user_id: userId, product_id: productId }
+            });
+        } else if (ipAddress) {
+            // Đối với guest user, kiểm tra theo IP và product
+            existingView = await this.productViewRepository.findOne({
+                where: { 
+                    user_id: IsNull(), 
+                    product_id: productId,
+                    ip_address: ipAddress 
+                }
+            });
+        }
 
         if (existingView) {
             // Cập nhật thời gian xem và thông tin mới
@@ -32,7 +45,7 @@ export class ProductViewService {
 
         // Tạo mới
         const view = this.productViewRepository.create({
-            user_id: userId,
+            user_id: userId ?? undefined,
             product_id: productId,
             ip_address: ipAddress,
             user_agent: userAgent,

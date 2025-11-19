@@ -29,10 +29,11 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe({ 
     whitelist: true, 
-    forbidNonWhitelisted: true, 
+    forbidNonWhitelisted: false, // Cho phép extra fields để @Transform xử lý
     transform: true,
     transformOptions: {
       enableImplicitConversion: true,
+      excludeExtraneousValues: false, // Không loại bỏ fields không có @Expose
     },
     exceptionFactory: (errors) => {
       const messages = errors.map(error => {

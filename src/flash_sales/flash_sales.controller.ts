@@ -1,5 +1,6 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, Post, Put, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
 import { FlashSalesService } from './flash_sales.service';
+import { CreateFlashSaleDto, UpdateFlashSaleDto, AddProductToFlashSaleDto, UpdateFlashSaleProductDto, BulkAddProductsDto } from './dto/flash-sale.dto';
 
 // Lấy tất cả các sản phẩm đang flash sale
 @Controller('flash-sales')
@@ -246,6 +247,92 @@ export class FlashSalesController {
         },
       },
     };
+  }
+
+  // ============== ADMIN FLASH SALE MANAGEMENT ==============
+
+  // Admin: Lấy tất cả Flash Sales (có phân trang)
+  @Get('admin/list')
+  async getAllFlashSales(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '20',
+    @Query('status') status?: string, // 'active', 'upcoming', 'expired', 'all'
+  ) {
+    return this.flashSalesService.getAllFlashSales(Number(page), Number(limit), status);
+  }
+
+  // Admin: Lấy chi tiết Flash Sale
+  @Get('admin/:id')
+  async getFlashSaleById(@Param('id', ParseIntPipe) id: number) {
+    return this.flashSalesService.getFlashSaleById(id);
+  }
+
+  // Admin: Tạo Flash Sale mới
+  @Post('admin')
+  async createFlashSale(@Body() dto: CreateFlashSaleDto) {
+    return this.flashSalesService.createFlashSale(dto);
+  }
+
+  // Admin: Cập nhật Flash Sale
+  @Put('admin/:id')
+  async updateFlashSale(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateFlashSaleDto,
+  ) {
+    return this.flashSalesService.updateFlashSale(id, dto);
+  }
+
+  // Admin: Xóa Flash Sale
+  @Delete('admin/:id')
+  async deleteFlashSale(@Param('id', ParseIntPipe) id: number) {
+    return this.flashSalesService.deleteFlashSale(id);
+  }
+
+  // Admin: Thêm sản phẩm vào Flash Sale
+  @Post('admin/:id/products')
+  async addProductToFlashSale(
+    @Param('id', ParseIntPipe) flashSaleId: number,
+    @Body() dto: AddProductToFlashSaleDto,
+  ) {
+    return this.flashSalesService.addProductToFlashSale(flashSaleId, dto);
+  }
+
+  // Admin: Thêm nhiều sản phẩm vào Flash Sale (bulk)
+  @Post('admin/:id/products/bulk')
+  async bulkAddProducts(
+    @Param('id', ParseIntPipe) flashSaleId: number,
+    @Body() dto: BulkAddProductsDto,
+  ) {
+    return this.flashSalesService.bulkAddProducts(flashSaleId, dto.products);
+  }
+
+  // Admin: Cập nhật sản phẩm trong Flash Sale
+  @Put('admin/:id/products/:itemId')
+  async updateFlashSaleProduct(
+    @Param('id', ParseIntPipe) flashSaleId: number,
+    @Param('itemId', ParseIntPipe) itemId: number,
+    @Body() dto: UpdateFlashSaleProductDto,
+  ) {
+    return this.flashSalesService.updateFlashSaleProduct(flashSaleId, itemId, dto);
+  }
+
+  // Admin: Xóa sản phẩm khỏi Flash Sale
+  @Delete('admin/:id/products/:itemId')
+  async removeProductFromFlashSale(
+    @Param('id', ParseIntPipe) flashSaleId: number,
+    @Param('itemId', ParseIntPipe) itemId: number,
+  ) {
+    return this.flashSalesService.removeProductFromFlashSale(flashSaleId, itemId);
+  }
+
+  // Admin: Lấy danh sách sản phẩm trong Flash Sale
+  @Get('admin/:id/products')
+  async getFlashSaleProducts(
+    @Param('id', ParseIntPipe) flashSaleId: number,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '20',
+  ) {
+    return this.flashSalesService.getFlashSaleProducts(flashSaleId, Number(page), Number(limit));
   }
 }
         

@@ -410,18 +410,18 @@ if (filter.categoryId) {
 
     const variant = this.variantRepository.create({
       product_id: productId,
-      variant_name: variantDto.variantName,
+      variant_name: variantDto.variant_name,
       sku: variantDto.sku || `${product.sku}-V${Date.now()}`,
       price: variantDto.price,
-      compare_price: variantDto.comparePrice,
+      compare_price: variantDto.compare_price,
       inventory_quantity: variantDto.quantity,
       image_url: variantDto.image,
       is_active: variantDto.status === 'active',
     });
 
     // Parse attribute_values if provided
-    if (variantDto.attributeValues) {
-      const attrs = variantDto.attributeValues;
+    if (variantDto.attribute_values) {
+      const attrs = variantDto.attribute_values;
       if (attrs.flavor) variant.flavor = attrs.flavor;
       if (attrs.size) variant.size = attrs.size;
       if (attrs.color) variant.color = attrs.color;
@@ -445,17 +445,17 @@ if (filter.categoryId) {
       throw new NotFoundException('Không tìm thấy variant');
     }
 
-    if (variantDto.variantName !== undefined) variant.variant_name = variantDto.variantName;
+    if (variantDto.variant_name !== undefined) variant.variant_name = variantDto.variant_name;
     if (variantDto.sku !== undefined) variant.sku = variantDto.sku;
     if (variantDto.price !== undefined) variant.price = variantDto.price;
-    if (variantDto.comparePrice !== undefined) variant.compare_price = variantDto.comparePrice;
+    if (variantDto.compare_price !== undefined) variant.compare_price = variantDto.compare_price;
     if (variantDto.quantity !== undefined) variant.inventory_quantity = variantDto.quantity;
     if (variantDto.image !== undefined) variant.image_url = variantDto.image;
     if (variantDto.status !== undefined) variant.is_active = variantDto.status === 'active';
 
     // Update attributes if provided
-    if (variantDto.attributeValues) {
-      const attrs = variantDto.attributeValues;
+    if (variantDto.attribute_values) {
+      const attrs = variantDto.attribute_values;
       if (attrs.flavor !== undefined) variant.flavor = attrs.flavor;
       if (attrs.size !== undefined) variant.size = attrs.size;
       if (attrs.color !== undefined) variant.color = attrs.color;
