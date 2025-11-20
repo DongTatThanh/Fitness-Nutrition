@@ -1,4 +1,4 @@
-import { IsString, IsOptional, MaxLength, IsInt, Min } from 'class-validator';
+import { IsString, IsOptional, MaxLength, IsInt, Min, IsBoolean } from 'class-validator';
 
 export class UpdateCategoryDto {
   @IsString()
@@ -30,7 +30,8 @@ export class UpdateCategoryDto {
   @Min(0)
   sort_order?: number;
 
-  @IsString()
+   @IsBoolean()
   @IsOptional()
-  status?: 'active' | 'inactive';
+   is_active?: boolean;
+
 }

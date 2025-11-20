@@ -36,6 +36,7 @@ export class Category {
 
   @Column({ type: 'tinyint', width: 1, default: 1 })
   is_active: boolean;
+ 
 
   @Column({ length: 255, nullable: true })
   seo_title: string;

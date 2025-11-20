@@ -9,7 +9,7 @@ import { PaymentStatus } from './enum/payment-status.enum';
 
 
 @Entity('orders')
-export class Order {
+export class    Order {
     @PrimaryGeneratedColumn()
     id: number;
 

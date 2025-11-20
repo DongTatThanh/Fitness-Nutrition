@@ -55,6 +55,7 @@ export class CategoriesController {
     @Post('admin')
     async createCategory(@Body() createData: CreateCategoryDto) {
         try {
+            
             const existingCategory = await this.categoriesService.findBySlug(createData.slug);
 
             if (existingCategory) {

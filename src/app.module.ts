@@ -24,6 +24,7 @@ import { MenuModule } from './menus/menu.module';
 import { OrderModule } from './orders/order.module';
 import { PaymentModule } from './payment/payment.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { PostModule } from './post/post.module';
 
 // import { PaymentModule } from './payment/payment.module';
 
@@ -65,6 +66,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     OrderModule,
     PaymentModule,
     DashboardModule,
+    PostModule
   ],
   controllers: [AppController],
   providers: [AppService],
