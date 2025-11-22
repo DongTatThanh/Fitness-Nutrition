@@ -13,13 +13,17 @@ async function bootstrap() {
     origin: [
       'http://localhost:8081',
       'http://localhost:3000',
+      'http://localhost:3002', // Super Admin frontend
       'http://localhost:5173', // Admin frontend
       'http://localhost:5174', // Admin frontend (Vite auto port)
       'http://127.0.0.1:8081',
+      'http://127.0.0.1:3002',
       'http://127.0.0.1:5173',
       'http://127.0.0.1:5174',
       /^http:\/\/192\.168\.\d+\.\d+:8081$/, // LAN access
+      /^http:\/\/192\.168\.\d+\.\d+:3002$/, // LAN access for Super Admin
       /^http:\/\/10\.\d+\.\d+\.\d+:8081$/, // Private network
+      /^http:\/\/10\.\d+\.\d+\.\d+:3002$/, // Private network for Super Admin
       process.env.FRONTEND_URL
     ].filter(Boolean),
     credentials: true,
@@ -38,9 +42,13 @@ async function bootstrap() {
     exceptionFactory: (errors) => {
       const messages = errors.map(error => {
         const constraints = error.constraints;
-        return Object.values(constraints || {}).join(', ');
+        if (constraints) {
+          // Lấy message đầu tiên (đã được định nghĩa bằng tiếng Việt trong DTO)
+          return Object.values(constraints)[0];
+        }
+        return `${error.property} không hợp lệ`;  
       });
-      return new BadRequestException(messages.join(', '));
+      return new BadRequestException(messages.join('; '));
     }
   }));
 

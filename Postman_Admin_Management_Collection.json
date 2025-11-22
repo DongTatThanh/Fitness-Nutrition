@@ -1,0 +1,609 @@
+{
+  "info": {
+    "name": "Admin Management API",
+    "description": "Collection để test API quản lý Admin (Thêm, Sửa, Xóa)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3201",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_id",
+      "value": "2",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Login Super Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('token', jsonData.access_token);",
+                  "    console.log('Token saved:', jsonData.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"superadmin@example.com\",\n  \"password\": \"SuperAdmin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Current Super Admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Admin Management",
+      "item": [
+        {
+          "name": "Get All Admins",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/list",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "list"]
+            }
+          }
+        },
+        {
+          "name": "Get Admin By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('admin_id', jsonData.id || jsonData.admin_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/{{admin_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "{{admin_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Admin - Test Case 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('admin_id', jsonData.id || jsonData.admin_id);",
+                  "    console.log('Created Admin ID:', jsonData.id || jsonData.admin_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testadmin1@example.com\",\n  \"password\": \"Test123!\",\n  \"full_name\": \"Test Admin 1\",\n  \"phone\": \"0123456789\",\n  \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/create-admin",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "create-admin"]
+            }
+          }
+        },
+        {
+          "name": "Create Admin - Test Case 2 (Manager)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testmanager1@example.com\",\n  \"password\": \"Manager123!\",\n  \"full_name\": \"Test Manager 1\",\n  \"phone\": \"0987654321\",\n  \"role\": \"manager\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/create-admin",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "create-admin"]
+            }
+          }
+        },
+        {
+          "name": "Create Admin - Test Case 3 (Minimal)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"minimal@example.com\",\n  \"password\": \"Min123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/create-admin",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "create-admin"]
+            }
+          }
+        },
+        {
+          "name": "Update Admin - Full Name & Phone",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Updated Admin Name\",\n  \"phone\": \"0999888777\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/{{admin_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "{{admin_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Admin - Only Full Name",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"New Admin Name\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/{{admin_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "{{admin_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Admin - Only Phone",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"0111222333\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/{{admin_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "{{admin_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Admin Role - To Manager",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"manager\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/{{admin_id}}/role",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "{{admin_id}}", "role"]
+            }
+          }
+        },
+        {
+          "name": "Update Admin Role - To Admin",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/{{admin_id}}/role",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "{{admin_id}}", "role"]
+            }
+          }
+        },
+        {
+          "name": "Update Admin Status - Deactivate",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": 0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/{{admin_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "{{admin_id}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Update Admin Status - Activate",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/{{admin_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "{{admin_id}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Change Admin Password",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newPassword\": \"NewPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/{{admin_id}}/password",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "{{admin_id}}", "password"]
+            }
+          }
+        },
+        {
+          "name": "Delete Admin",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/{{admin_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "{{admin_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Error Test Cases",
+      "item": [
+        {
+          "name": "Create Admin - Duplicate Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin1@example.com\",\n  \"password\": \"Test123!\",\n  \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/create-admin",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "create-admin"]
+            }
+          }
+        },
+        {
+          "name": "Create Admin - Invalid Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"invalid-email\",\n  \"password\": \"Test123!\",\n  \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/create-admin",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "create-admin"]
+            }
+          }
+        },
+        {
+          "name": "Create Admin - Short Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"shortpass@example.com\",\n  \"password\": \"123\",\n  \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/create-admin",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "create-admin"]
+            }
+          }
+        },
+        {
+          "name": "Create Admin - Invalid Role (Super Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"trysuper@example.com\",\n  \"password\": \"Test123!\",\n  \"role\": \"super_admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/create-admin",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "create-admin"]
+            }
+          }
+        },
+        {
+          "name": "Update Admin - Empty Body",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/{{admin_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "{{admin_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Admin - Invalid ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/99999",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "99999"]
+            }
+          }
+        },
+        {
+          "name": "Delete Admin - Invalid ID",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/99999",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "99999"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+

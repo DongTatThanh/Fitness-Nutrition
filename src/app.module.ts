@@ -25,6 +25,8 @@ import { OrderModule } from './orders/order.module';
 import { PaymentModule } from './payment/payment.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { PostModule } from './post/post.module';
+import { AdminModule } from './admin/admin.module';
+import { SuperAdminModule } from './super-admin/super-admin.module';
 
 // import { PaymentModule } from './payment/payment.module';
 
@@ -66,7 +68,9 @@ import { PostModule } from './post/post.module';
     OrderModule,
     PaymentModule,
     DashboardModule,
-    PostModule
+    PostModule,
+    AdminModule,
+    SuperAdminModule
   ],
   controllers: [AppController],
   providers: [AppService],

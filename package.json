@@ -18,7 +18,10 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:db": "node scripts/test-db-connection.js"
+    "test:db": "node scripts/test-db-connection.js",
+    "seed:super-admin": "ts-node -r tsconfig-paths/register src/seeds/create-super-admin.ts",
+    "verify:super-admin": "ts-node -r tsconfig-paths/register src/seeds/verify-super-admin.ts",
+    "seed:test-admins": "ts-node -r tsconfig-paths/register src/seeds/create-test-admins.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.1",
