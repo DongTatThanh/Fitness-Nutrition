@@ -9,6 +9,7 @@ import { CreateProductDto } from './dto/createProductDto';
 import { UpdateProductDto } from './dto/updateproductDto';
 import { AdminProductFilterDto } from './dto/getProductDto';
 import { CreateVariantDto, UpdateVariantDto } from './dto/variant.dto';
+import { FlashSalesService } from '../flash_sales/flash_sales.service';
 
 
 
@@ -21,6 +22,7 @@ export class ProductsService {
     private readonly productImageRepository: Repository<ProductImage>,
     @InjectRepository(ProductVariant)
     private readonly variantRepository: Repository<ProductVariant>,
+    private readonly flashSalesService: FlashSalesService,
   ) {}
  /// lấy tất cả các danh sách sản phẩm
 
@@ -97,7 +99,7 @@ export class ProductsService {
   }
 
   // lấy chi tiết sản phẩm theo id
-  async findProductsId(productId: number): Promise<Product> {
+  async findProductsId(productId: number): Promise<Product & { flash_sale?: any }> {
     const product = await this.productsRepository.findOne({
       where: {
         id: productId,
@@ -108,6 +110,29 @@ export class ProductsService {
 
     if (!product) {
       throw new NotFoundException(`Product với ID ${productId} không tồn tại`);
+    }
+
+    // Kiểm tra flash sale đang active cho sản phẩm này
+    const flashSaleInfo = await this.flashSalesService.getFlashSalePrice(productId);
+    
+    // Nếu có flash sale, thêm thông tin vào response
+    if (flashSaleInfo) {
+      const discountPercent = this.flashSalesService.calculateDiscountPercent(
+        flashSaleInfo.original_price,
+        flashSaleInfo.sale_price
+      );
+      
+      return {
+        ...product,
+        flash_sale: {
+          is_active: true,
+          sale_price: flashSaleInfo.sale_price,
+          original_price: flashSaleInfo.original_price,
+          discount_percent: discountPercent,
+          flash_sale_id: flashSaleInfo.flash_sale_id,
+          flash_sale_item_id: flashSaleInfo.flash_sale_item_id,
+        },
+      };
     }
 
     return product;

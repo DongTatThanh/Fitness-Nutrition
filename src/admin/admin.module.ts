@@ -9,6 +9,7 @@ import { AdminService } from './admin.service';
 import { AdminAuthService } from './admin-auth.service';
 import { AdminActivityLogService } from './admin-activity-log.service';
 import { AdminRoleService } from './admin-role.service';
+import { Admin2FAService } from './admin-2fa.service';
 import { AdminController } from './admin.controller';
 import { AdminJwtStrategy } from './admin-jwt.strategy';
 import { AdminAuthGuard } from './admin-auth.guard';
@@ -22,9 +23,9 @@ import { AdminAuthGuard } from './admin-auth.guard';
       signOptions: { expiresIn: '24h' }, // Admin token có thể có thời gian dài hơn
     }),
   ],
-  providers: [AdminService, AdminAuthService, AdminActivityLogService, AdminRoleService, AdminJwtStrategy, AdminAuthGuard],
+  providers: [AdminService, AdminAuthService, AdminActivityLogService, AdminRoleService, Admin2FAService, AdminJwtStrategy, AdminAuthGuard],
   controllers: [AdminController],
-  exports: [AdminService, AdminAuthGuard, AdminAuthService, AdminActivityLogService, AdminRoleService],
+  exports: [AdminService, AdminAuthGuard, AdminAuthService, AdminActivityLogService, AdminRoleService, Admin2FAService],
 })
 export class AdminModule {}
 

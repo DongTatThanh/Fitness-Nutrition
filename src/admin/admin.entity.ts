@@ -25,6 +25,13 @@ export class Admin {
   @Column({ type: 'tinyint', default: 1 })
   is_active: number;
 
+  @Column({ name: 'secret_2fa', type: 'varchar', length: 255, nullable: true })
+  @Exclude()
+  secret_2fa: string;
+
+  @Column({ name: 'is_2fa_enabled', type: 'tinyint', default: 0 })
+  is_2fa_enabled: number;
+
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
 

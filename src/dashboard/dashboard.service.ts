@@ -24,7 +24,6 @@ export class DashboardService {
     // Thống kê tổng quan
     async getDashboardStats() {
         try {
-            this.logger.log('Fetching dashboard statistics');
 
             const now = new Date();
             const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -164,7 +163,6 @@ export class DashboardService {
     // Doanh thu theo tháng (với so sánh năm trước)
     async getRevenueByMonth(months: number = 12) {
         try {
-            this.logger.log(`Fetching revenue by month for last ${months} months`);
 
             const result = await this.orderRepository
                 .createQueryBuilder('order')
@@ -200,7 +198,6 @@ export class DashboardService {
     // Top sản phẩm bán chạy (với thêm thông tin)
     async getTopProducts(limit: number = 10) {
         try {
-            this.logger.log(`Fetching top ${limit} products`);
 
             const result = await this.orderItemRepository
                 .createQueryBuilder('item')
@@ -236,7 +233,6 @@ export class DashboardService {
     // Đơn hàng theo trạng thái (với tỷ lệ phần trăm)
     async getOrdersByStatus() {
         try {
-            this.logger.log('Fetching orders by status');
 
             const result = await this.orderRepository
                 .createQueryBuilder('order')
@@ -266,7 +262,6 @@ export class DashboardService {
     // Doanh thu theo danh mục (cải thiện)
     async getRevenueByCategory() {
         try {
-            this.logger.log('Fetching revenue by category');
 
             const result = await this.orderItemRepository
                 .createQueryBuilder('item')
@@ -308,7 +303,6 @@ export class DashboardService {
     // Khách hàng mới gần đây (với thêm thống kê)
     async getNewCustomers(days: number = 30) {
         try {
-            this.logger.log(`Fetching new customers from last ${days} days`);
 
             const dateFrom = new Date();
             dateFrom.setDate(dateFrom.getDate() - days);
@@ -354,7 +348,6 @@ export class DashboardService {
     // 1. Lấy doanh thu chi tiết theo ngày
     async getRevenueByDay(startDate?: string, endDate?: string) {
         try {
-            this.logger.log(`Fetching revenue by day from ${startDate} to ${endDate}`);
 
             const start = startDate ? new Date(startDate) : new Date(new Date().setDate(new Date().getDate() - 30));
             const end = endDate ? new Date(endDate) : new Date();
@@ -389,7 +382,6 @@ export class DashboardService {
     // 2. Lấy chi tiết sản phẩm theo ID
     async getProductDetails(productId: number) {
         try {
-            this.logger.log(`Fetching details for product ${productId}`);
 
             const product = await this.productRepository.findOne({
                 where: { id: productId },
@@ -457,7 +449,6 @@ export class DashboardService {
     // 3. Lấy danh sách đơn hàng theo trạng thái cụ thể
     async getOrderDetailsByStatus(status: string, page: number = 1, limit: number = 20) {
         try {
-            this.logger.log(`Fetching orders with status: ${status}, page: ${page}`);
 
             const skip = (page - 1) * limit;
 
@@ -514,7 +505,6 @@ export class DashboardService {
     // 4. Lấy khách hàng theo tháng với chi tiết đơn hàng
     async getCustomersByMonth(months: number = 6) {
         try {
-            this.logger.log(`Fetching customers by month for last ${months} months`);
 
             const customersByMonth = await this.userRepository
                 .createQueryBuilder('user')
@@ -566,7 +556,6 @@ export class DashboardService {
     // 5. Lấy chi tiết danh mục với danh sách sản phẩm
     async getCategoryDetails(categoryId: number) {
         try {
-            this.logger.log(`Fetching details for category ${categoryId}`);
 
             // Lấy thông tin danh mục
             const products = await this.productRepository.find({

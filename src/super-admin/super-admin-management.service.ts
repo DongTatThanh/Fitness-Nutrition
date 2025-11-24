@@ -301,7 +301,6 @@ export class SuperAdminManagementService {
       return await this.activityLogService.logActivity(data);
     } catch (error) {
       // Không throw error nếu log fail để không ảnh hưởng đến flow chính
-      console.error('Failed to log activity:', error);
     }
   }
 }

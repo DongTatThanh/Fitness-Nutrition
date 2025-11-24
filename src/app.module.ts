@@ -27,6 +27,10 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { PostModule } from './post/post.module';
 import { AdminModule } from './admin/admin.module';
 import { SuperAdminModule } from './super-admin/super-admin.module';
+import { SuppliersModule } from './suppliers/suppliers.module';
+import { InventoryModule } from './inventory/inventory.module';
+import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
+import { ShippingModule } from './shipping/shipping.module';
 
 // import { PaymentModule } from './payment/payment.module';
 
@@ -70,7 +74,11 @@ import { SuperAdminModule } from './super-admin/super-admin.module';
     DashboardModule,
     PostModule,
     AdminModule,
-    SuperAdminModule
+    SuperAdminModule,
+    SuppliersModule,
+    InventoryModule,
+    PurchaseOrdersModule,
+    ShippingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

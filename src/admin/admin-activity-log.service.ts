@@ -77,7 +77,6 @@ export class AdminActivityLogService {
         lastPage: Math.ceil((total || 0) / validLimit),
       };
     } catch (error) {
-      console.error('Error getting activity logs:', error);
       // Trả về empty result thay vì throw error
       return {
         data: [],
