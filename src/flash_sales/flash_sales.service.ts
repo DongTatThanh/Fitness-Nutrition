@@ -27,8 +27,8 @@ export class FlashSalesService {
     const flashSale = await this.flashSalesRepository.findOne({
       where: {
         is_active: true,
-        start_time: LessThanOrEqual(now),
-        end_time: MoreThanOrEqual(now),
+        start_time: LessThanOrEqual(now),// LessThanOrEqual so sánh toán tử <=
+        end_time: MoreThanOrEqual(now), // MoreThanOrEqualc so sánh toán tử >=
       },
       relations: [
         'items', 
@@ -94,7 +94,7 @@ export class FlashSalesService {
     } else {
       whereCondition.variant_id = null;
     }
-
+               // hàm chính 
     const flashSaleItem = await this.flashSaleProductsRepository.findOne({
       where: whereCondition,
     });
@@ -127,7 +127,7 @@ export class FlashSalesService {
       .skip((page - 1) * limit)
       .take(limit);
 
-    // Filter theo status
+    // lọc theo status
     if (status === 'active') {
       query.andWhere('fs.is_active = :is_active', { is_active: true })
         .andWhere('fs.start_time <= :now', { now })
@@ -138,7 +138,7 @@ export class FlashSalesService {
       query.andWhere('fs.end_time < :now', { now });
     }
 
-    const [data, total] = await query.getManyAndCount();
+    const [data, total] = await query.getManyAndCount(); //  getManyAndCount hàm có só sãn trong type orm 
 
     return {
       data: data.map(fs => ({
@@ -361,7 +361,8 @@ export class FlashSalesService {
   }
 
   // Cập nhật sản phẩm trong Flash Sale
-  async updateFlashSaleProduct(flashSaleId: number, itemId: number, dto: UpdateFlashSaleProductDto) {
+  async updateFlashSaleProduct(flashSaleId: number, itemId: number, dto: UpdateFlashSaleProductDto)
+   {
     const item = await this.flashSaleProductsRepository.findOne({
       where: { id: itemId, flash_sale_id: flashSaleId },
     });

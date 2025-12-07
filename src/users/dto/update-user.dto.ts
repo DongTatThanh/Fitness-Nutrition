@@ -11,11 +11,17 @@ export class UpdateUserDto {
     @IsEmail({}, { message: 'Email không đúng định dạng. Vui lòng nhập email hợp lệ' })
     @MaxLength(100, { message: 'Email không được quá 100 ký tự' })
     email?: string;
+      
 
+  
     @IsOptional()
     @IsString({ message: 'Số điện thoại phải là chuỗi ký tự' })
     @MaxLength(20, { message: 'Số điện thoại không được quá 20 ký tự' })
     phone?: string;
+
+
+    
+
 
     @IsOptional()
     @IsString({ message: 'Họ tên phải là chuỗi ký tự' })

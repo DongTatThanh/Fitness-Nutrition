@@ -17,7 +17,7 @@ export class DiscountCodeService {
     async findAll(): Promise<DiscountCode[]> {
         return await this.discountCodeRepository.find({
             order: {
-                created_at: 'DESC'   /// sắp xêp theo thứ tự tăng dần cũ mới ....
+                created_at: 'DESC'   /// sắp xêp theo thứ tự tăng dần cũ mới
             }
         });
     }
@@ -29,9 +29,9 @@ export class DiscountCodeService {
             .where('discount.start_date <= :now', { now })
             .andWhere('discount.end_date >= :now', { now })
             .andWhere('discount.is_active = :isActive', { isActive: 1 })
-            .andWhere('(discount.usage_limit IS NULL OR discount.used_count < discount.usage_limit)')
-            .orderBy('discount.created_at', 'DESC')
-            .getMany();
+                .andWhere('(discount.usage_limit IS NULL OR discount.used_count < discount.usage_limit)')// kiểm tra nếu có giới hạn sử dụng
+                .orderBy('discount.created_at', 'DESC')
+            .getMany(); // trả về 1 mảng 
     }
 
     // Tìm mã giảm giá theo code
@@ -87,7 +87,11 @@ export class DiscountCodeService {
     }
 
     // Validate và sử dụng mã giảm giá
-    async validateAndUseCode(code: string): Promise<{ valid: boolean; discountValue?: number; discountType?: string; message?: string }> {
+    async validateAndUseCode(code: string):
+     Promise<{ valid: boolean; 
+        discountValue?: number; 
+        discountType?: 
+        string; message?: string }> {
         const discountCode = await this.discountCodeRepository.findOne({
             where: { code }
         });
@@ -156,9 +160,9 @@ export class DiscountCodeService {
 
         // Kiểm tra nếu update code và code mới đã tồn tại (nếu có trong DTO)
         const codeFromDto = (updateDiscountCodeDto as any).code;
-        if (codeFromDto && codeFromDto !== discountCode.code) {
+        if (codeFromDto && codeFromDto !== discountCode.code) {  //  nếu code mói khác code cũ 
             const existingCode = await this.discountCodeRepository.findOne({
-                where: { code: codeFromDto }
+                where: { code: codeFromDto }  // kiểm tra code mới đã tồn tại hay chưa
             });
 
             if (existingCode) {
@@ -175,7 +179,7 @@ export class DiscountCodeService {
         if (startDate >= endDate) {
             throw new BadRequestException('Ngày bắt đầu phải nhỏ hơn ngày kết thúc');
         }
-
+            
         // Only update fields that are provided in the DTO
         if (updateDiscountCodeDto.code !== undefined) {
             discountCode.code = updateDiscountCodeDto.code;
@@ -261,17 +265,17 @@ export class DiscountCodeService {
         };
     }
 
-    // Cập nhật ảnh cho mã giảm giá
-    async updateDiscountCodeImage(id: number, imageUrl: string): Promise<DiscountCode> {
-        const discountCode = await this.discountCodeRepository.findOne({
-            where: { id }
-        });
+        // Cập nhật ảnh cho mã giảm giá
+        async updateDiscountCodeImage(id: number, imageUrl: string): Promise<DiscountCode> {
+            const discountCode = await this.discountCodeRepository.findOne({
+                where: { id }
+            });
 
-        if (!discountCode) {
-            throw new NotFoundException(`Mã giảm giá với ID ${id} không tồn tại`);
-        }
+            if (!discountCode) {
+                throw new NotFoundException(`Mã giảm giá với ID ${id} không tồn tại`);
+            }
 
-        discountCode.image = imageUrl;
-        return await this.discountCodeRepository.save(discountCode);
+            discountCode.image = imageUrl;
+            return await this.discountCodeRepository.save(discountCode);
+        }   
     }
-}

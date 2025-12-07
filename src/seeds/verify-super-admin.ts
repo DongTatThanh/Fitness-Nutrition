@@ -20,66 +20,38 @@ async function verifySuperAdmin() {
 
   try {
     await dataSource.initialize();
-    console.log('✅ Đã kết nối database\n');
 
     const adminRepository = dataSource.getRepository(Admin);
 
-    // Tìm Super Admin
     const superAdmin = await adminRepository.findOne({
       where: { email: 'superadmin@example.com' },
     });
 
     if (!superAdmin) {
-      console.log('❌ Không tìm thấy Super Admin với email: superadmin@example.com');
-      console.log('\nHãy chạy SQL script: database/create-admin-tables.sql');
-      await dataSource.destroy();
-      return;
+      throw new Error('Super Admin với email superadmin@example.com chưa tồn tại');
     }
 
-    console.log('📋 Thông tin Super Admin:');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('ID:', superAdmin.admin_id);
-    console.log('Email:', superAdmin.email);
-    console.log('Full Name:', superAdmin.full_name);
-    console.log('Role:', superAdmin.role);
-    console.log('Is Active:', superAdmin.is_active);
-    console.log('Password Hash:', superAdmin.password_hash?.substring(0, 30) + '...');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
-    // Test password
     const testPassword = 'SuperAdmin123!';
     const isValid = await bcrypt.compare(testPassword, superAdmin.password_hash);
     
-    if (isValid) {
-      console.log('✅ Password "SuperAdmin123!" KHỚP với hash trong database');
-    } else {
-      console.log('❌ Password "SuperAdmin123!" KHÔNG khớp với hash trong database');
-      console.log('\n🔧 Đang tạo lại password hash...');
-      
-      const newHash = await bcrypt.hash(testPassword, 10);
-      console.log('Hash mới:', newHash);
-      console.log('\nChạy SQL sau để cập nhật:');
-      console.log(`UPDATE admins SET password = '${newHash}' WHERE email = 'superadmin@example.com';`);
+    if (!isValid) {
+      throw new Error('Password Super Admin không khớp với giá trị mặc định');
     }
 
-    // Kiểm tra role
     if (superAdmin.role !== 'super_admin') {
-      console.log(`\n⚠️  Role hiện tại: "${superAdmin.role}" (cần là "super_admin")`);
-      console.log('Chạy SQL:');
-      console.log(`UPDATE admins SET role = 'super_admin' WHERE email = 'superadmin@example.com';`);
+      throw new Error('Super Admin chưa được gán role super_admin');
     }
 
-    // Kiểm tra is_active
     if (superAdmin.is_active !== 1) {
-      console.log(`\n⚠️  Tài khoản đang bị vô hiệu hóa (is_active = ${superAdmin.is_active})`);
-      console.log('Chạy SQL:');
-      console.log(`UPDATE admins SET is_active = 1 WHERE email = 'superadmin@example.com';`);
+      throw new Error('Super Admin đang bị vô hiệu hóa');
     }
-
-    await dataSource.destroy();
   } catch (error) {
     console.error('❌ Lỗi:', error);
     process.exit(1);
+  } finally {
+    if (dataSource.isInitialized) {
+      await dataSource.destroy();
+    }
   }
 }
 

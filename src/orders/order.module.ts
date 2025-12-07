@@ -8,6 +8,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Order } from './order.entity';
 import { OrderItem } from './orderItem.entity';
 import { WebSocketModule } from '../WebSocket/websocket.module';
+import { ProductsModule } from '../products/products.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 
 @Module({
@@ -16,6 +18,8 @@ import { WebSocketModule } from '../WebSocket/websocket.module';
     CartModule,
     DiscountCodeModule,
     WebSocketModule,
+    ProductsModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [OrderController],
   providers: [OrderService],

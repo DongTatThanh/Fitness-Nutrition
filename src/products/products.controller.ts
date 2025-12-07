@@ -17,7 +17,34 @@ export class ProductsController {
 
     // lấy tất cả các sản phẩm 
     @Get() 
-    async findAll() {
+    async findAll(
+        @Query('search') search?: string,
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+        @Query('brandId') brandId?: string,
+        @Query('categoryId') categoryId?: string,
+        @Query('minPrice') minPrice?: string,
+        @Query('maxPrice') maxPrice?: string,
+        @Query('sort') sort?: string,
+    ) {
+        // Nếu có search hoặc filter, dùng endpoint search
+        if (search || brandId || categoryId || minPrice || maxPrice || sort) {
+            // Đảm bảo page và limit là số hợp lệ
+            const pageNum = page ? Math.max(1, parseInt(page, 10) || 1) : 1;
+            const limitNum = limit ? Math.max(1, parseInt(limit, 10) || 12) : 12;
+            
+            return this.productsService.searchProducts({
+                search, 
+                brandId: brandId ? Number(brandId) : undefined,
+                categoryId: categoryId ? Number(categoryId) : undefined,
+                priceMin: minPrice ? Number(minPrice) : undefined,
+                priceMax: maxPrice ? Number(maxPrice) : undefined,
+                sort,
+                page: pageNum,
+                limit: limitNum,
+            });
+        }
+        // Nếu không có filter, trả về tất cả
         return this.productsService.findAll();
     }
 
@@ -53,7 +80,9 @@ export class ProductsController {
             
             // Chạy bất đồng bộ, không block response
             this.productViewService.addView(req.user.id, id, ipAddress, userAgent)
-                .catch(() => {});
+                .catch(() => {
+                    // Silently fail - don't block response
+                });
         }
         
         return product;

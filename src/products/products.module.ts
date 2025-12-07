@@ -10,9 +10,9 @@ import { FlashSalesModule } from '../flash_sales/flash-_ales.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Product, ProductImage, ProductVariant]), 
+    TypeOrmModule.forFeature([Product, ProductImage, ProductVariant]),
     ProductViewModule,
-    FlashSalesModule, // Import FlashSalesModule để sử dụng FlashSalesService
+    FlashSalesModule,
   ],
   providers: [ProductsService],
   controllers: [ProductsController],

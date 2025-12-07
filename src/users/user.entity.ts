@@ -55,6 +55,8 @@ export class User {
   @Column({ length: 100, nullable: true })
   city: string;
 
+ 
+
   @Column({ length: 100, nullable: true })
   district: string;
 

@@ -64,21 +64,46 @@ export class AuthService {
 
   async requestPasswordReset(email: string) 
   {
+    try {
     const user = await this.usersService.findByEmail(email);
-    if (!user) throw new NotFoundException('email không tồn tại trong database');
+      if (!user) {
+        // Không tiết lộ email có tồn tại hay không để bảo mật
+        return { message: 'Nếu email tồn tại, mã OTP đã được gửi qua email' };
+      }
+
+      // Xóa các OTP cũ của user này (nếu có)
+      try {
+        await this.passwordResetRepo.delete({ user_id: user.user_id });
+      } catch (deleteErr) {
+        // Tiếp tục dù có lỗi xóa OTP cũ
+      }
     
     // Generate 6-digit OTP instead of hex token
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     
     const expiresAt = new Date(Date.now() + 1000 * 60 * 15); // 15 minutes
-    const record = this.passwordResetRepo.create({ user_id: user.user_id, token: otpCode, expires_at: expiresAt });
+      
+      try {
+        const record = this.passwordResetRepo.create({ 
+          user_id: user.user_id, 
+          token: otpCode, 
+          expires_at: expiresAt 
+        });
     await this.passwordResetRepo.save(record);
+      } catch (dbErr) {
+        console.error('[Forgot Password] Database error:', dbErr);
+        // Kiểm tra xem có phải lỗi bảng không tồn tại không
+        if (dbErr.message && dbErr.message.includes('Table') && dbErr.message.includes("doesn't exist")) {
+          throw new BadRequestException('Hệ thống đang bảo trì. Vui lòng liên hệ quản trị viên.');
+        }
+        throw dbErr;
+      }
     
     // send email via nodemailer if SMTP is configured
     const smtpConfigured = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
     
     const mailOptions = {
-      from: process.env.FROM_EMAIL,
+        from: process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@thgymstore.online',
       to: user.email,
       subject: 'Mã xác thực đặt lại mật khẩu',
       html: `
@@ -108,24 +133,44 @@ export class AuthService {
     };
 
     if (smtpConfigured) {
+        try {
       const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: Number(process.env.SMTP_PORT || 587),
-        secure: false,
+            secure: process.env.SMTP_PORT === '465',
         auth: {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS,
         },
       });
-      try {
         await transporter.sendMail(mailOptions);
-      } catch (err) {
-        // Silently fail - don't expose email errors to user
+        } catch (emailErr) {
+          // Log error nhưng không throw để không tiết lộ lỗi cho user
+          console.error('Email sending error:', emailErr);
       }
     }
+      
     // For testing you can return OTP if SHOW_RESET_TOKEN=true
-    if (process.env.SHOW_RESET_TOKEN === 'true') return { message: 'Reset OTP generated', otp: otpCode };
-    return { message: 'Mã OTP đã được gửi qua email' };
+      if (process.env.SHOW_RESET_TOKEN === 'true') {
+        return { message: 'Reset OTP generated', otp: otpCode };
+      }
+      
+      return { message: 'Nếu email tồn tại, mã OTP đã được gửi qua email' };
+    } catch (error) {
+      console.error('[Forgot Password] Error:', error);
+      console.error('[Forgot Password] Error stack:', error.stack);
+      
+      // Trả về lỗi chi tiết hơn trong development
+      if (process.env.NODE_ENV === 'development') {
+        return {
+          error: 'Có lỗi xảy ra',
+          message: error.message,
+          details: error.stack
+        };
+      }
+      
+      throw new BadRequestException('Có lỗi xảy ra khi xử lý yêu cầu. Vui lòng thử lại sau.');
+    }
   }
 
   async resetPassword(otp: string, newPassword: string) {

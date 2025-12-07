@@ -155,7 +155,7 @@ export class UsersController {
           'user.customer_tier_id',
           'user.created_at'
         ])
-        .where('user.user_id = :id', { id })
+        .where('user.user_id = :id', { id })  
         .getOne();
 
       if (!user) {
@@ -179,7 +179,7 @@ export class UsersController {
   }
 
   // API Admin: Thêm user mới
-  @Post('admin/create')
+  @Post('admin/createUser')
   async createUser(
     @Body() userData: CreateUserDto
   ) {
@@ -275,3 +275,4 @@ export class UsersController {
     }
   }
 }
+  

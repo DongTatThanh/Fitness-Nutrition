@@ -32,4 +32,4 @@ export class UpdatePostDto {
   @IsInt()
   @IsOptional()
   is_featured?: number;
-}
+} 

@@ -20,14 +20,10 @@ async function createTestAdmins() {
 
   try {
     await dataSource.initialize();
-    console.log('✅ Đã kết nối database\n');
 
     const adminRepository = dataSource.getRepository(Admin);
     const password = 'Admin123!';
     const passwordHash = await bcrypt.hash(password, 10);
-
-    console.log('🔑 Password hash:', passwordHash);
-    console.log('📝 Password cho tất cả admin: Admin123!\n');
 
     // Danh sách admin cần tạo
     const testAdmins = [
@@ -54,8 +50,6 @@ async function createTestAdmins() {
       },
     ];
 
-    console.log('📋 Đang tạo test admins...\n');
-
     for (const adminData of testAdmins) {
       // Kiểm tra email đã tồn tại chưa
       const existing = await adminRepository.findOne({
@@ -63,14 +57,12 @@ async function createTestAdmins() {
       });
 
       if (existing) {
-        console.log(`⚠️  Email ${adminData.email} đã tồn tại. Đang cập nhật...`);
         existing.password_hash = passwordHash;
         existing.full_name = adminData.full_name;
         existing.phone = adminData.phone;
         existing.role = adminData.role;
         existing.is_active = adminData.is_active;
         await adminRepository.save(existing);
-        console.log(`   ✅ Đã cập nhật: ${adminData.email}`);
       } else {
         const admin = adminRepository.create({
           email: adminData.email,
@@ -81,29 +73,8 @@ async function createTestAdmins() {
           is_active: adminData.is_active,
         });
         await adminRepository.save(admin);
-        console.log(`   ✅ Đã tạo: ${adminData.email} (${adminData.role})`);
       }
     }
-
-    console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('✅ Hoàn thành! Danh sách test admins:');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
-    const allAdmins = await adminRepository.find({
-      where: {},
-      order: { created_at: 'DESC' },
-    });
-
-    const regularAdmins = allAdmins.filter(a => a.role !== 'super_admin');
-
-    regularAdmins.forEach((admin, index) => {
-      console.log(`${index + 1}. ${admin.full_name}`);
-      console.log(`   Email: ${admin.email}`);
-      console.log(`   Role: ${admin.role}`);
-      console.log(`   Status: ${admin.is_active === 1 ? 'Hoạt động' : 'Vô hiệu hóa'}`);
-      console.log(`   Password: Admin123!`);
-      console.log('');
-    });
 
     await dataSource.destroy();
   } catch (error) {

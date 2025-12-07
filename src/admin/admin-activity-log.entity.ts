@@ -1,32 +1,31 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import { Admin } from './admin.entity';
 
-@Entity({ name: 'admin_activity_logs' })
+@Entity('admin_activity_logs')
 export class AdminActivityLog {
-  @PrimaryGeneratedColumn({ name: 'id' })
+  @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'user_id', type: 'int', nullable: true })
-  user_id: number;
 
-  @Column({ length: 100, nullable: false })
+
+  @ManyToOne(() => Admin)
+  @JoinColumn({ name: 'admin_id' })
+  admin: Admin;
+
+  @Column({ type: 'varchar', length: 255 })
   action: string;
 
-  @Column({ name: 'entity_type', length: 50, nullable: true })
-  entity_type: string;
+  @Column({ type: 'text', nullable: true })
+  description: string;
 
-  @Column({ name: 'entity_id', type: 'int', nullable: true })
-  entity_id: number;
-
-  @Column({ type: 'json', nullable: true })
-  details: any;
-
-  @Column({ name: 'ip_address', length: 45, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   ip_address: string;
 
-  @Column({ name: 'user_agent', type: 'text', nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   user_agent: string;
 
   @CreateDateColumn({ name: 'created_at' })
-  created_at: Date;
+  createdAt: Date;
 }
+
 

@@ -33,6 +33,85 @@ export class ProductsService {
         }   
       });
     }
+
+    // Tìm kiếm sản phẩm với đầy đủ filter (cho user)
+    async searchProducts(filter: {
+      search?: string;
+      brandId?: number;
+      categoryId?: number;
+      priceMin?: number;
+      priceMax?: number;
+      sort?: string;
+      page: number;
+      limit: number;
+    }) {
+      // Đảm bảo page và limit là số hợp lệ
+      const page = Math.max(1, Number(filter.page) || 1);
+      const limit = Math.max(1, Math.min(100, Number(filter.limit) || 12)); // Giới hạn tối đa 100 items
+      
+      const query = this.productsRepository
+        .createQueryBuilder('product')
+        .leftJoinAndSelect('product.brand', 'brand')
+        .leftJoinAndSelect('product.category', 'category')
+        .where('product.status = :status', { status: 'active' }); // Chỉ lấy sản phẩm active
+
+      // Tìm kiếm theo tên hoặc SKU
+      if (filter.search) {
+        query.andWhere(
+          '(product.name LIKE :search OR product.sku LIKE :search OR product.short_description LIKE :search)',
+          { search: `%${filter.search}%` }
+        );
+      }
+
+      // Lọc theo category
+      if (filter.categoryId !== undefined) {
+        query.andWhere('product.category_id = :categoryId', { categoryId: filter.categoryId });
+      }
+
+      // Lọc theo brand
+      if (filter.brandId !== undefined) {
+        query.andWhere('product.brand_id = :brandId', { brandId: filter.brandId });
+      }
+
+      // Lọc theo giá
+      if (filter.priceMin !== undefined) {
+        query.andWhere('product.price >= :minPrice', { minPrice: filter.priceMin });
+      }
+      if (filter.priceMax !== undefined) {
+        query.andWhere('product.price <= :maxPrice', { maxPrice: filter.priceMax });
+      }
+
+      // Sắp xếp
+      switch (filter.sort) {
+        case 'price_asc':
+          query.orderBy('product.price', 'ASC');
+          break;
+        case 'price_desc':
+          query.orderBy('product.price', 'DESC');
+          break;
+        case 'name_asc':
+          query.orderBy('product.name', 'ASC');
+          break;
+        case 'name_desc':
+          query.orderBy('product.name', 'DESC');
+          break;
+        default:
+          query.orderBy('product.created_at', 'DESC');
+          break;
+      }
+
+      // Phân trang
+      query.skip((page - 1) * limit).take(limit);
+
+      const [data, total] = await query.getManyAndCount();
+
+      return {
+        data,
+        total,
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+      };
+    }
     // lấy tất cả các sản phẩm đang được giảm giá
 
    async findOnSaleProducts(limit: number = 10): Promise<Product[]> {

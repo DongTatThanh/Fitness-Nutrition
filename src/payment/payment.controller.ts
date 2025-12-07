@@ -9,33 +9,33 @@
         constructor(private readonly paymentService: PaymentService) {}
 
         // Tạo thông tin thanh toán (QR code) - nhận orderId hoặc orderNumber
-        @Post('info')
-        async createPaymentInfo(
-            @Req() req: Request,
-            @Body('orderId') orderId?: number,
-            @Body('orderNumber') orderNumber?: string,
-        ) { 
-            if (!req['user']?.id) {
-                return {
-                    success: false,
-                    message: 'Vui lòng đăng nhập để tạo thông tin thanh toán',
-                    data: null
-                };
+            @Post('info')
+            async createPaymentInfo(
+                @Req() req: Request,
+                @Body('orderId') orderId?: number,
+                @Body('orderNumber') orderNumber?: string,
+            ) { 
+                if (!req['user']?.id) {
+                    return {
+                        success: false,
+                        message: 'Vui lòng đăng nhập để tạo thông tin thanh toán',
+                        data: null
+                    };
+                }
+                
+                // Nếu có orderNumber thì dùng orderNumber, không thì dùng orderId
+                if (orderNumber) {
+                    return this.paymentService.createPaymentInfoByNumber(orderNumber, req['user'].id);
+                } else if (orderId) {
+                    return this.paymentService.createPaymentInfo(orderId, req['user'].id);
+                } else {
+                    return {
+                        success: false,
+                        message: 'Vui lòng cung cấp orderId hoặc orderNumber',
+                        data: null
+                    };
+                }
             }
-            
-            // Nếu có orderNumber thì dùng orderNumber, không thì dùng orderId
-            if (orderNumber) {
-                return this.paymentService.createPaymentInfoByNumber(orderNumber, req['user'].id);
-            } else if (orderId) {
-                return this.paymentService.createPaymentInfo(orderId, req['user'].id);
-            } else {
-                return {
-                    success: false,
-                    message: 'Vui lòng cung cấp orderId hoặc orderNumber',
-                    data: null
-                };
-            }
-        }
 
         // Kiểm tra trạng thái thanh toán
         @Get('check/:orderNumber')

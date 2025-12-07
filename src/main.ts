@@ -18,8 +18,11 @@ async function bootstrap() {
       'http://localhost:5174', // Admin frontend (Vite auto port)
       'http://127.0.0.1:8081',
       'http://127.0.0.1:3002',
-      'http://127.0.0.1:5173',
+      'http://127.0.0.1:5173',  
       'http://127.0.0.1:5174',
+      'https://frontend.thgymstore.online',
+      'https://thgymstore.online',
+      'https://admin.thgymstore.online',
       /^http:\/\/192\.168\.\d+\.\d+:8081$/, // LAN access
       /^http:\/\/192\.168\.\d+\.\d+:3002$/, // LAN access for Super Admin
       /^http:\/\/10\.\d+\.\d+\.\d+:8081$/, // Private network
@@ -56,8 +59,6 @@ async function bootstrap() {
   const host = process.env.HOST ?? '0.0.0.0'; 
   
   await app.listen(port, host);
-  console.log(` Server running on http://${host}:${port}`);
-  console.log(` Available on LAN at http://YOUR_IP:${port}`);
 }
 
 bootstrap();

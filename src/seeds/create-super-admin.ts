@@ -20,7 +20,6 @@ async function createSuperAdmin() {
 
   try {
     await dataSource.initialize();
-    console.log('✅ Đã kết nối database');
 
     const adminRepository = dataSource.getRepository(Admin);
 
@@ -30,8 +29,6 @@ async function createSuperAdmin() {
     });
 
     if (existingSuperAdmin) {
-      console.log('⚠️  Đã tồn tại Super Admin trong hệ thống');
-      console.log(`   Email: ${existingSuperAdmin.email}`);
       await dataSource.destroy();
       return;
     }
@@ -47,12 +44,8 @@ async function createSuperAdmin() {
     });
 
     if (existingAdmin) {
-      console.log(`⚠️  Email ${defaultEmail} đã tồn tại. Đang cập nhật thành Super Admin...`);
       existingAdmin.role = 'super_admin';
       await adminRepository.save(existingAdmin);
-      console.log('✅ Đã cập nhật admin thành Super Admin');
-      console.log(`   Email: ${defaultEmail}`);
-      console.log(`   Password: ${defaultPassword}`);
       await dataSource.destroy();
       return;
     }
@@ -70,15 +63,6 @@ async function createSuperAdmin() {
     });
 
     await adminRepository.save(superAdmin);
-
-    console.log('✅ Đã tạo Super Admin thành công!');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('📧 Email:', defaultEmail);
-    console.log('🔑 Password:', defaultPassword);
-    console.log('👤 Full Name:', defaultFullName);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('⚠️  LƯU Ý: Hãy đổi mật khẩu sau khi đăng nhập!');
-    console.log('⚠️  LƯU Ý: Xóa hoặc thay đổi biến môi trường sau khi sử dụng!');
 
     await dataSource.destroy();
   } catch (error) {

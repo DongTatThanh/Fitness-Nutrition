@@ -1,7 +1,7 @@
 import { Injectable, ForbiddenException, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { AdminService } from '../admin/admin.service';
-import { AdminActivityLogService } from '../admin/admin-activity-log.service';
 import * as bcrypt from 'bcryptjs';
+
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminRoleDto } from './dto/update-admin-role.dto';
 import { UpdateAdminStatusDto } from './dto/update-admin-status.dto';
@@ -11,14 +11,13 @@ import { UpdateAdminDto } from './dto/update-admin.dto';
 export class SuperAdminManagementService {
   constructor(
     private adminService: AdminService,
-    private activityLogService: AdminActivityLogService,
   ) {}
 
   /**
    * Tạo admin mới (chỉ Super Admin)
    * Chỉ được tạo Admin thường, không được tạo Super Admin
    */
-  async createAdmin(adminData: CreateAdminDto, currentAdminId?: number, ipAddress?: string, userAgent?: string) {
+  async createAdmin(adminData: CreateAdminDto, currentAdminId?: number) {
     // Không cho phép tạo Super Admin
     if (adminData.role === 'super_admin') {
       throw new ForbiddenException('Không được phép tạo Super Admin. Super Admin chỉ có thể quản lý Admin thường.');
@@ -42,19 +41,6 @@ export class SuperAdminManagementService {
       role: 'admin', // Luôn là admin thường, không cho phép super_admin
       is_active: 1,
     });
-
-    // Log activity
-    if (currentAdminId) {
-      await this.activityLogService.logActivity({
-        user_id: currentAdminId,
-        action: 'CREATE_ADMIN',
-        entity_type: 'admin',
-        entity_id: newAdmin.admin_id,
-        details: { email: newAdmin.email, role: newAdmin.role },
-        ip_address: ipAddress,
-        user_agent: userAgent,
-      });
-    }
 
     return newAdmin;
   }
@@ -96,7 +82,7 @@ export class SuperAdminManagementService {
    * Cập nhật role của admin (chỉ Super Admin)
    * Không cho phép sửa role của Super Admin
    */
-  async updateAdminRole(adminId: number, updateRoleDto: UpdateAdminRoleDto, currentAdminId?: number, ipAddress?: string, userAgent?: string) {
+  async updateAdminRole(adminId: number, updateRoleDto: UpdateAdminRoleDto, currentAdminId?: number) {
     const admin = await this.adminService.findById(adminId);
     if (!admin) {
       throw new NotFoundException('Admin không tồn tại');
@@ -112,21 +98,7 @@ export class SuperAdminManagementService {
       throw new ForbiddenException('Không được phép đổi role thành Super Admin.');
     }
 
-    const oldRole = admin.role;
     const updated = await this.adminService.updateProfile(adminId, { role: updateRoleDto.role });
-
-    // Log activity
-    if (currentAdminId) {
-      await this.activityLogService.logActivity({
-        user_id: currentAdminId,
-        action: 'UPDATE_ADMIN_ROLE',
-        entity_type: 'admin',
-        entity_id: adminId,
-        details: { old_role: oldRole, new_role: updateRoleDto.role, email: admin.email },
-        ip_address: ipAddress,
-        user_agent: userAgent,
-      });
-    }
 
     return updated;
   }
@@ -135,7 +107,7 @@ export class SuperAdminManagementService {
    * Cập nhật trạng thái admin (bật/tắt) (chỉ Super Admin)
    * Không cho phép sửa trạng thái của Super Admin
    */
-  async updateAdminStatus(adminId: number, updateStatusDto: UpdateAdminStatusDto, currentAdminId?: number, ipAddress?: string, userAgent?: string) {
+  async updateAdminStatus(adminId: number, updateStatusDto: UpdateAdminStatusDto, currentAdminId?: number) {
     const admin = await this.adminService.findById(adminId);
     if (!admin) {
       throw new NotFoundException('Admin không tồn tại');
@@ -146,21 +118,7 @@ export class SuperAdminManagementService {
       throw new ForbiddenException('Không được phép thay đổi trạng thái của Super Admin.');
     }
 
-    const oldStatus = admin.is_active;
     const updated = await this.adminService.updateProfile(adminId, { is_active: updateStatusDto.is_active });
-
-    // Log activity
-    if (currentAdminId) {
-      await this.activityLogService.logActivity({
-        user_id: currentAdminId,
-        action: 'UPDATE_ADMIN_STATUS',
-        entity_type: 'admin',
-        entity_id: adminId,
-        details: { old_status: oldStatus, new_status: updateStatusDto.is_active, email: admin.email },
-        ip_address: ipAddress,
-        user_agent: userAgent,
-      });
-    }
 
     return updated;
   }
@@ -199,7 +157,7 @@ export class SuperAdminManagementService {
    * Đổi mật khẩu admin (chỉ Super Admin)
    * Không cho phép đổi mật khẩu Super Admin
    */
-  async changeAdminPassword(adminId: number, newPassword: string, currentAdminId?: number, ipAddress?: string, userAgent?: string) {
+  async changeAdminPassword(adminId: number, newPassword: string, currentAdminId?: number) {
     const admin = await this.adminService.findById(adminId);
     if (!admin) {
       throw new NotFoundException('Admin không tồn tại');
@@ -213,19 +171,6 @@ export class SuperAdminManagementService {
     const hash = await bcrypt.hash(newPassword, 10);
     await this.adminService.updatePassword(adminId, hash);
 
-    // Log activity
-    if (currentAdminId) {
-      await this.activityLogService.logActivity({
-        user_id: currentAdminId,
-        action: 'CHANGE_ADMIN_PASSWORD',
-        entity_type: 'admin',
-        entity_id: adminId,
-        details: { email: admin.email },
-        ip_address: ipAddress,
-        user_agent: userAgent,
-      });
-    }
-
     return { message: 'Đổi mật khẩu thành công' };
   }
 
@@ -233,7 +178,7 @@ export class SuperAdminManagementService {
    * Xóa admin (chỉ Super Admin)
    * Không cho phép xóa Super Admin
    */
-  async deleteAdmin(adminId: number, currentAdminId?: number, ipAddress?: string, userAgent?: string) {
+  async deleteAdmin(adminId: number, currentAdminId?: number) {
     const admin = await this.adminService.findById(adminId);
     if (!admin) {
       throw new NotFoundException('Admin không tồn tại');
@@ -244,64 +189,7 @@ export class SuperAdminManagementService {
       throw new ForbiddenException('Không được phép xóa Super Admin.');
     }
 
-    // Log activity trước khi xóa
-    if (currentAdminId) {
-      await this.activityLogService.logActivity({
-        user_id: currentAdminId,
-        action: 'DELETE_ADMIN',
-        entity_type: 'admin',
-        entity_id: adminId,
-        details: { email: admin.email, role: admin.role },
-        ip_address: ipAddress,
-        user_agent: userAgent,
-      });
-    }
-
     await this.adminService.delete(adminId);
     return { message: 'Xóa admin thành công' };
   }
-
-  /**
-   * Lấy danh sách activity logs (chỉ Super Admin)
-   */
-  async getActivityLogs(options?: {
-    page?: number;
-    limit?: number;
-    user_id?: number;
-    action?: string;
-    entity_type?: string;
-  }) {
-    return this.activityLogService.getLogs(options);
-  }
-
-  /**
-   * Lấy chi tiết activity log (chỉ Super Admin)
-   */
-  async getActivityLogById(logId: number) {
-    const log = await this.activityLogService.getLogById(logId);
-    if (!log) {
-      throw new NotFoundException('Activity log không tồn tại');
-    }
-    return log;
-  }
-
-  /**
-   * Log activity (helper method)
-   */
-  async logActivity(data: {
-    user_id?: number;
-    action: string;
-    entity_type?: string;
-    entity_id?: number;
-    details?: any;
-    ip_address?: string;
-    user_agent?: string;
-  }) {
-    try {
-      return await this.activityLogService.logActivity(data);
-    } catch (error) {
-      // Không throw error nếu log fail để không ảnh hưởng đến flow chính
-    }
-  }
 }
-

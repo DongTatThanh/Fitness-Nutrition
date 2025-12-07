@@ -37,24 +37,5 @@ export class AdminAuthService {
       }),
     };
   }
-
-  /**
-   * Tạo temp token cho 2FA verification
-   * Token này có thời gian ngắn (5 phút) chỉ để verify 2FA
-   */
-  async createTempToken(admin: any) {
-    const payload = { 
-      sub: admin.admin_id, 
-      email: admin.email, 
-      role: admin.role || 'admin',
-      type: 'admin',
-      temp: true, // Đánh dấu đây là temp token
-      purpose: '2fa_verification'
-    };
-    return this.jwtService.sign(payload, {
-      secret: process.env.ADMIN_JWT_SECRET || process.env.JWT_SECRET || 'change_this_secret',
-      expiresIn: '5m', // Temp token chỉ có hiệu lực 5 phút
-    });
-  }
 }
 

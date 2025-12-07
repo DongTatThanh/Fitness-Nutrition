@@ -1,9 +1,9 @@
-import { Controller, Get, Post, Put, Patch, Delete, Body, Param, ParseIntPipe, UseGuards, BadRequestException, HttpException, HttpStatus, UnauthorizedException, Req, Query, UseInterceptors } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { Controller, Post, Put, Patch, Delete, Body, Param, ParseIntPipe, UseGuards, BadRequestException, UnauthorizedException, Req, UseInterceptors, Get } from '@nestjs/common';
 import { SuperAdminGuard } from './super-admin.guard';
 import { SuperAdminManagementService } from './super-admin-management.service';
 import { AdminAuthService } from '../admin/admin-auth.service';
-import { AdminResponseInterceptor } from '../admin/admin-response.interceptor';
+import { Admin2FAService } from '../admin/admin-2fa.service';
+
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminRoleDto } from './dto/update-admin-role.dto';
 import { UpdateAdminStatusDto } from './dto/update-admin-status.dto';
@@ -11,12 +11,9 @@ import { ChangeAdminPasswordDto } from './dto/change-admin-password.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { AdminLoginDto } from '../admin/dto/admin-login.dto';
 import { Verify2FADto } from '../admin/dto/verify-2fa.dto';
-import { Setup2FADto } from '../admin/dto/setup-2fa.dto';
-import { Enable2FADto } from '../admin/dto/enable-2fa.dto';
-import { Admin2FAService } from '../admin/admin-2fa.service';
 
 @Controller('super-admin')
-@UseInterceptors(AdminResponseInterceptor)
+
 export class SuperAdminController {
   constructor(
     private superAdminManagementService: SuperAdminManagementService,
@@ -24,14 +21,6 @@ export class SuperAdminController {
     private admin2FAService: Admin2FAService,
   ) {}
 
-  /**
-   * Helper method để lấy IP address và User Agent từ request
-   */
-  private getRequestInfo(req: any) {
-    const ipAddress = req.ip || req.connection?.remoteAddress || req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
-    const userAgent = req.headers['user-agent'] || 'unknown';
-    return { ipAddress, userAgent };
-  }
 
   // ==================== AUTH ROUTES ====================
 
@@ -55,28 +44,13 @@ export class SuperAdminController {
     const is2FAEnabled = await this.admin2FAService.is2FAEnabled(admin.admin_id);
     
     if (is2FAEnabled) {
-      // Tạo temp token cho 2FA verification
-      const tempToken = await this.adminAuthService.createTempToken(admin);
-      
       // Yêu cầu verify 2FA token
       return {
         requires2FA: true,
-        temp_token: tempToken,
+        message: 'Vui lòng nhập mã 2FA để tiếp tục đăng nhập',
         adminId: admin.admin_id,
       };
     }
-
-    // Log login activity
-    const { ipAddress, userAgent } = this.getRequestInfo(req);
-    await this.superAdminManagementService.logActivity({
-      user_id: admin.admin_id,
-      action: 'LOGIN',
-      entity_type: 'admin',
-      entity_id: admin.admin_id,
-      details: { email: admin.email, role: admin.role },
-      ip_address: ipAddress,
-      user_agent: userAgent,
-    });
 
     return this.adminAuthService.login(admin);
   }
@@ -91,13 +65,7 @@ export class SuperAdminController {
       throw new BadRequestException('Admin ID không được để trống');
     }
 
-    const isValid = await this.admin2FAService.verifyAdmin2FA(dto.adminId, dto.token);
-    
-    if (!isValid) {
-      throw new UnauthorizedException('Mã 2FA không đúng. Vui lòng thử lại.');
-    }
-
-    // Lấy admin và kiểm tra phải là Super Admin
+    // Lấy admin trước để kiểm tra
     const admin = await this.adminAuthService['adminService'].findById(dto.adminId);
     if (!admin) {
       throw new UnauthorizedException('Admin không tồn tại');
@@ -107,39 +75,81 @@ export class SuperAdminController {
       throw new UnauthorizedException('Chỉ Super Admin mới có thể đăng nhập tại đây');
     }
 
-    // Log login activity
-    const { ipAddress, userAgent } = this.getRequestInfo(req);
-    await this.superAdminManagementService.logActivity({
-      user_id: admin.admin_id,
-      action: 'LOGIN',
-      entity_type: 'admin',
-      entity_id: admin.admin_id,
-      details: { email: admin.email, role: admin.role, with2FA: true },
-      ip_address: ipAddress,
-      user_agent: userAgent,
-    });
+    // Kiểm tra 2FA đã được enable chưa
+    const is2FAEnabled = await this.admin2FAService.is2FAEnabled(dto.adminId);
+    if (!is2FAEnabled) {
+      throw new UnauthorizedException('2FA chưa được kích hoạt cho tài khoản này');
+    }
+
+    // Verify token
+    const isValid = await this.admin2FAService.verifyAdmin2FA(dto.adminId, dto.token);
+    
+    if (!isValid) {
+      throw new UnauthorizedException(
+        'Mã 2FA không đúng. ' +
+        'Có thể secret trong database không khớp với app authenticator. ' +
+        'Vui lòng kiểm tra: 1) App authenticator đang dùng đúng tài khoản, ' +
+        '2) Thời gian thiết bị đã đồng bộ, ' +
+        '3) Hoặc liên hệ admin để reset 2FA và setup lại.'
+      );
+    }
 
     return this.adminAuthService.login(admin);
   }
 
   /**
-   * Lấy thông tin Super Admin đang đăng nhập
-   * GET /super-admin/auth/me
+   * Setup 2FA cho Super Admin (không cần đã đăng nhập, dùng khi bị lock)
+   * POST /super-admin/auth/setup-2fa
+   * Cần email và password để xác thực, trả về secret/QR để quét trên app
    */
-  @Get('auth/me')
-  @UseGuards(SuperAdminGuard)
-  getMe(@Req() req: any) {
-    return req.user;
+  @Post('auth/setup-2fa')
+  async setup2FA(@Body() dto: { email: string; password: string }, @Req() req: any) {
+    // Xác thực admin bằng email và password
+    const admin = await this.adminAuthService.validateAdmin(dto.email, dto.password);
+    if (!admin) {
+      throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
+    }
+
+    // Kiểm tra phải là Super Admin
+    if (admin.role !== 'super_admin') {
+      throw new UnauthorizedException('Chỉ Super Admin mới có thể setup 2FA tại đây');
+    }
+
+    // Setup 2FA (tạo secret và QR code mới để super admin quét)
+    const result = await this.admin2FAService.setup2FA(admin.admin_id, dto.password);
+
+    return {
+      ...result,
+      message: 'Setup 2FA thành công. Vui lòng quét QR code trên app authenticator và sau đó gọi /super-admin/auth/enable-2fa để kích hoạt.',
+    };
   }
 
   /**
-   * Lấy profile Super Admin
-   * GET /super-admin/auth/profile
+   * Enable 2FA cho Super Admin sau khi đã quét QR
+   * POST /super-admin/auth/enable-2fa
+   * Cần email, password và token 2FA từ app
    */
-  @Get('auth/profile')
-  @UseGuards(SuperAdminGuard)
-  getProfile(@Req() req: any) {
-    return req.user;
+  @Post('auth/enable-2fa')
+  async enable2FA(@Body() dto: { email: string; password: string; token: string }, @Req() req: any) {
+    // Xác thực admin bằng email và password
+    const admin = await this.adminAuthService.validateAdmin(dto.email, dto.password);
+    if (!admin) {
+      throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
+    }
+
+    // Kiểm tra phải là Super Admin
+    if (admin.role !== 'super_admin') {
+      throw new UnauthorizedException('Chỉ Super Admin mới có thể enable 2FA tại đây');
+    }
+
+    // Enable 2FA bằng token sau khi đã quét QR
+    const result = await this.admin2FAService.enable2FA(admin.admin_id, dto.token);
+
+    return {
+      ...result,
+      message: 'Kích hoạt 2FA cho Super Admin thành công. Từ lần sau đăng nhập sẽ yêu cầu mã 2FA.',
+      adminId: admin.admin_id,
+    };
   }
 
   /**
@@ -148,60 +158,22 @@ export class SuperAdminController {
    */
   @Post('auth/logout')
   @UseGuards(SuperAdminGuard)
-  async logout(@Req() req: any) {
-    return { message: 'Đăng xuất thành công' };
-  }
-
-  // ==================== 2FA ENDPOINTS ====================
-
-  /**
-   * Setup 2FA - Tạo secret và QR code
-   * POST /super-admin/auth/2fa/setup
-   */
-  @Post('auth/2fa/setup')
-  @UseGuards(SuperAdminGuard)
-  async setup2FA(@Body() dto: Setup2FADto, @Req() req: any) {
-    const adminId = req.user?.adminId || req.user?.id || req.user?.sub;
-    return this.admin2FAService.setup2FA(adminId, dto.password);
-  }
-
-  /**
-   * Enable 2FA - Kích hoạt sau khi verify token
-   * POST /super-admin/auth/2fa/enable
-   */
-  @Post('auth/2fa/enable')
-  @UseGuards(SuperAdminGuard)
-  async enable2FA(@Body() dto: Enable2FADto, @Req() req: any) {
-    const adminId = req.user?.adminId || req.user?.id || req.user?.sub;
-    return this.admin2FAService.enable2FA(adminId, dto.token);
-  }
-
-  /**
-   * Disable 2FA - Tắt 2FA
-   * POST /super-admin/auth/2fa/disable
-   */
-  @Post('auth/2fa/disable')
-  @UseGuards(SuperAdminGuard)
-  async disable2FA(@Body() dto: Setup2FADto, @Req() req: any) {
-    const adminId = req.user?.adminId || req.user?.id || req.user?.sub;
-    return this.admin2FAService.disable2FA(adminId, dto.password);
-  }
-
-  /**
-   * Kiểm tra trạng thái 2FA
-   * GET /super-admin/auth/2fa/status
-   */
-  @Get('auth/2fa/status')
-  @UseGuards(SuperAdminGuard)
-  async get2FAStatus(@Req() req: any) {
-    const adminId = req.user?.adminId || req.user?.id || req.user?.sub;
-    const isEnabled = await this.admin2FAService.is2FAEnabled(adminId);
-    return {
-      is2FAEnabled: isEnabled,
-    };
+  async logout() {
+    // Token dạng JWT nên phía server không cần xoá, client chỉ cần xoá token
+    return { message: 'Đăng xuất Super Admin thành công' };
   }
 
   // ==================== MANAGEMENT ROUTES ====================
+
+  /**
+   * Lấy danh sách tất cả admin (chỉ Super Admin)
+   * GET /super-admin/list
+   */
+  @Get('list')
+  @UseGuards(SuperAdminGuard)
+  async getAllAdmins() {
+    return this.superAdminManagementService.getAllAdmins();
+  }
 
   /**
    * Tạo admin mới (chỉ Super Admin)
@@ -210,54 +182,19 @@ export class SuperAdminController {
   @Post('create-admin')
   @UseGuards(SuperAdminGuard)
   async createAdmin(@Body() createAdminDto: CreateAdminDto, @Req() req: any) {
-    const { ipAddress, userAgent } = this.getRequestInfo(req);
-    return this.superAdminManagementService.createAdmin(
-      createAdminDto,
-      req.user?.adminId || req.user?.id,
-      ipAddress,
-      userAgent
-    );
-  }
-
-  /**
-   * Lấy danh sách tất cả admin (chỉ Super Admin)
-   * GET /super-admin/list
-   * Phải đặt trước route :id để tránh conflict
-   */
-  @Get('list')
-  @UseGuards(SuperAdminGuard)
-  async getAllAdmins() {
     try {
-      return await this.superAdminManagementService.getAllAdmins();
-    } catch (error) {
-      throw new HttpException(
-        error.message || 'Lỗi khi lấy danh sách admin',
-        error.status || HttpStatus.INTERNAL_SERVER_ERROR
+      return await this.superAdminManagementService.createAdmin(
+        createAdminDto,
+        req.user?.adminId || req.user?.id
       );
-    }
-  }
-
-  /**
-   * Lấy thông tin chi tiết admin (chỉ Super Admin)
-   * GET /super-admin/:id
-   * Phải đặt sau route cụ thể như 'list'
-   */
-  @Get(':id')
-  @UseGuards(SuperAdminGuard)
-  async getAdminById(@Param('id', new ParseIntPipe({ 
-    errorHttpStatusCode: HttpStatus.BAD_REQUEST,
-    exceptionFactory: () => new BadRequestException('ID phải là số nguyên dương')
-  })) id: number) {
-    if (id <= 0) {
-      throw new BadRequestException('ID phải là số nguyên dương');
-    }
-    try {
-      return await this.superAdminManagementService.getAdminById(id);
     } catch (error) {
-      throw new HttpException(
-        error.message || 'Lỗi khi lấy thông tin admin',
-        error.status || HttpStatus.INTERNAL_SERVER_ERROR
-      );
+      // Nếu là validation error từ class-validator, throw lại với message rõ ràng hơn
+      if (error.status === 400 || error instanceof BadRequestException) {
+        throw new BadRequestException(
+          error.message || 'Dữ liệu không hợp lệ. Vui lòng kiểm tra: email đúng định dạng, password tối thiểu 6 ký tự, phone 10-11 số (nếu có)'
+        );
+      }
+      throw error;
     }
   }
 
@@ -268,23 +205,17 @@ export class SuperAdminController {
   @Patch(':id/role')
   @UseGuards(SuperAdminGuard)
   async updateAdminRole(
-    @Param('id', new ParseIntPipe({ 
-      errorHttpStatusCode: HttpStatus.BAD_REQUEST,
-      exceptionFactory: () => new BadRequestException('ID phải là số nguyên dương')
-    })) id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateRoleDto: UpdateAdminRoleDto,
     @Req() req: any,
   ) {
     if (id <= 0) {
       throw new BadRequestException('ID phải là số nguyên dương');
     }
-    const { ipAddress, userAgent } = this.getRequestInfo(req);
     return this.superAdminManagementService.updateAdminRole(
       id,
       updateRoleDto,
-      req.user?.adminId || req.user?.id,
-      ipAddress,
-      userAgent
+      req.user?.adminId || req.user?.id
     );
   }
 
@@ -295,10 +226,7 @@ export class SuperAdminController {
   @Patch(':id/status')
   @UseGuards(SuperAdminGuard)
   async updateAdminStatus(
-    @Param('id', new ParseIntPipe({ 
-      errorHttpStatusCode: HttpStatus.BAD_REQUEST,
-      exceptionFactory: () => new BadRequestException('ID phải là số nguyên dương')
-    })) id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() body: any,
     @Req() req: any,
   ) {
@@ -319,6 +247,8 @@ export class SuperAdminController {
       // Kiểm tra nếu là form-data
       const contentType = req.headers['content-type'] || '';
       if (contentType.includes('multipart/form-data') || contentType.includes('application/x-www-form-urlencoded')) {
+        // NestJS không tự parse form-data, cần dùng multer hoặc body-parser
+        // Tạm thời hướng dẫn user dùng raw JSON
         throw new BadRequestException(
           'Vui lòng chuyển sang raw JSON trong Postman. ' +
           'Chọn tab Body → raw → JSON, sau đó nhập: {"is_active": 0} hoặc {"is_active": 1}'
@@ -357,13 +287,10 @@ export class SuperAdminController {
     // Tạo DTO object
     const updateStatusDto: UpdateAdminStatusDto = { is_active: isActive };
     
-    const { ipAddress, userAgent } = this.getRequestInfo(req);
     return this.superAdminManagementService.updateAdminStatus(
       id,
       updateStatusDto,
-      req.user?.adminId || req.user?.id,
-      ipAddress,
-      userAgent
+      req.user?.adminId || req.user?.id
     );
   }
 
@@ -374,10 +301,7 @@ export class SuperAdminController {
   @Put(':id')
   @UseGuards(SuperAdminGuard)
   async updateAdmin(
-    @Param('id', new ParseIntPipe({ 
-      errorHttpStatusCode: HttpStatus.BAD_REQUEST,
-      exceptionFactory: () => new BadRequestException('ID phải là số nguyên dương')
-    })) id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateAdminDto: UpdateAdminDto,
   ) {
     if (id <= 0) {
@@ -397,23 +321,17 @@ export class SuperAdminController {
   @Patch(':id/password')
   @UseGuards(SuperAdminGuard)
   async changeAdminPassword(
-    @Param('id', new ParseIntPipe({ 
-      errorHttpStatusCode: HttpStatus.BAD_REQUEST,
-      exceptionFactory: () => new BadRequestException('ID phải là số nguyên dương')
-    })) id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() changePasswordDto: ChangeAdminPasswordDto,
     @Req() req: any,
   ) {
     if (id <= 0) {
       throw new BadRequestException('ID phải là số nguyên dương');
     }
-    const { ipAddress, userAgent } = this.getRequestInfo(req);
     return this.superAdminManagementService.changeAdminPassword(
       id,
       changePasswordDto.newPassword,
-      req.user?.adminId || req.user?.id,
-      ipAddress,
-      userAgent
+      req.user?.adminId || req.user?.id
     );
   }
 
@@ -424,76 +342,16 @@ export class SuperAdminController {
   @Delete(':id')
   @UseGuards(SuperAdminGuard)
   async deleteAdmin(
-    @Param('id', new ParseIntPipe({ 
-      errorHttpStatusCode: HttpStatus.BAD_REQUEST,
-      exceptionFactory: () => new BadRequestException('ID phải là số nguyên dương')
-    })) id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Req() req: any,
   ) {
     if (id <= 0) {
       throw new BadRequestException('ID phải là số nguyên dương');
     }
-    const { ipAddress, userAgent } = this.getRequestInfo(req);
     return this.superAdminManagementService.deleteAdmin(
       id,
-      req.user?.adminId || req.user?.id,
-      ipAddress,
-      userAgent
+      req.user?.adminId || req.user?.id
     );
   }
 
-  // ==================== ACTIVITY LOGS ROUTES ====================
-
-  /**
-   * Lấy danh sách activity logs (chỉ Super Admin)
-   * GET /super-admin/activity-logs
-   */
-  @Get('activity-logs')
-  @UseGuards(SuperAdminGuard)
-  async getActivityLogs(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-    @Query('user_id') userId?: string,
-    @Query('action') action?: string,
-    @Query('entity_type') entityType?: string,
-  ) {
-    try {
-      // Parse query parameters an toàn
-      const pageNum = page ? (isNaN(Number(page)) ? undefined : Number(page)) : undefined;
-      const limitNum = limit ? (isNaN(Number(limit)) ? undefined : Number(limit)) : undefined;
-      const userIdNum = userId ? (isNaN(Number(userId)) ? undefined : Number(userId)) : undefined;
-
-      return await this.superAdminManagementService.getActivityLogs({
-        page: pageNum,
-        limit: limitNum,
-        user_id: userIdNum,
-        action: action || undefined,
-        entity_type: entityType || undefined,
-      });
-    } catch (error) {
-      throw new HttpException(
-        error.message || 'Lỗi khi lấy danh sách activity logs',
-        error.status || HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
-
-  /**
-   * Lấy chi tiết activity log (chỉ Super Admin)
-   * GET /super-admin/activity-logs/:id
-   */
-  @Get('activity-logs/:id')
-  @UseGuards(SuperAdminGuard)
-  async getActivityLogById(
-    @Param('id', new ParseIntPipe({ 
-      errorHttpStatusCode: HttpStatus.BAD_REQUEST,
-      exceptionFactory: () => new BadRequestException('ID phải là số nguyên dương')
-    })) id: number,
-  ) {
-    if (id <= 0) {
-      throw new BadRequestException('ID phải là số nguyên dương');
-    }
-    return this.superAdminManagementService.getActivityLogById(id);
-  }
 }
-

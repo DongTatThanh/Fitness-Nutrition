@@ -7,6 +7,7 @@ import { Injectable } from '@nestjs/common';
   cors: {
     origin: [
       'http://localhost:8081',
+     'https://frontend.thgymstore.online',
       'http://localhost:3000',
       'http://localhost:5173',
       'http://localhost:5174',

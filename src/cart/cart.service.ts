@@ -33,7 +33,7 @@ export class CartService {
         const cart = await this.cartRepository.findOne({
             where: { user_id: userId },
             relations: ['items', 'items.product', 'items.product.brand'],
-        });
+        }); 
 
         if (!cart) {
             return { 
@@ -116,7 +116,7 @@ export class CartService {
             }
 
             if (existingItem) {
-                // cập nhật số lượng nếu sản phẩm đã tồn tại trong giỏ hàng 
+                // cập nhật số lưoợng nếu sản phẩm đã tồn tại trng giỏ hàng 
                 // Giữ nguyên giá cũ nếu đã có (để tránh thay đổi giá khi flash sale kết thúc)
                 existingItem.quantity += AddToCartDto.quantity;
                 await this.cartItemRepository.save(existingItem);
@@ -190,6 +190,13 @@ export class CartService {
 
         if (!cartItem) {
             throw new NotFoundException(`Sản phẩm với ID ${CartItem_id} không tồn tại trong giỏ hàng.`);
+        }
+        if( quantity <= 0 ) {
+            throw new NotFoundException(`Số lượng sản phẩm phải lớn hơn 0.`);
+        }
+        // kiểm tra tồn kho 
+        if (cartItem.product.inventory_quantity < quantity) {
+            throw new NotFoundException(`Sản phẩm với ID ${cartItem.product.id} không đủ số lượng trong kho.`);
         }
 
         cartItem.quantity = quantity;

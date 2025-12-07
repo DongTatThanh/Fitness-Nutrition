@@ -11,13 +11,18 @@ import { Order } from "./order.entity";
 
 
 
-@Controller('/api/orders')
+@Controller('api/orders')
 @UseGuards(JwtAuthGuard)
 export class OrderController {
     constructor(private readonly orderService: OrderService) {}
 
-    // tạo đơn hàng mới từ giỏ hàng 
+    // Test route để kiểm tra controller hoạt động (không cần auth)
+    @Get('test')
+    testRoute() {
+        return { message: 'Order controller is working', timestamp: new Date().toISOString() };
+    }
 
+    // tạo đơn hàng mới từ giỏ hàng 
     @Post()
     async createOrder
     (@Request() req,

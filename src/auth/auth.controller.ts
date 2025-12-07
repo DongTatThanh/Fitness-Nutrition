@@ -55,9 +55,9 @@ export class AuthController {
   }
 
   @Post('logout')
-  @UseGuards(AuthGuard('jwt'))
   async logout(@Req() req: any) {
-    
+    // Không yêu cầu auth vì khi logout token có thể đã hết hạn
+    // Chỉ cần trả về success, client sẽ xóa token ở phía client
     return { message: 'Logged out successfully' };
   }
 
